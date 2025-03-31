@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, LayoutDashboard, FileInput, Sparkles, MessageSquare, LineChart, FileText, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -150,7 +150,7 @@ const UserFlow = () => {
   ];
 
   // Auto-advance the active step
-  React.useEffect(() => {
+  useEffect(() => {
     if (!autoplayEnabled) return;
     
     const timer = setTimeout(() => {

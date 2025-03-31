@@ -1,11 +1,12 @@
 
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import UserFlow from "@/components/UserFlow";
 import AuthSection from "@/components/AuthSection";
 import Footer from "@/components/Footer";
-import { useEffect } from "react";
 
 const Index = () => {
   // Add framer-motion to smooth scroll to sections when navigating

@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const AuthSection = () => {
   return (
@@ -18,13 +19,17 @@ const AuthSection = () => {
               Join thousands of users who are already transforming their lives with NexaCore. Sign up today to access personalized recommendations for your education, health, and financial journey.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Button size="lg" className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light group">
-                Create Account
-                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
-              </Button>
-              <Button size="lg" variant="outline" className="border-nexacore-teal text-white hover:bg-nexacore-teal/20">
-                Sign In
-              </Button>
+              <Link to="/signup">
+                <Button size="lg" className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light group">
+                  Create Account
+                  <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button size="lg" variant="outline" className="border-nexacore-teal text-white hover:bg-nexacore-teal/20">
+                  Sign In
+                </Button>
+              </Link>
             </div>
           </div>
           

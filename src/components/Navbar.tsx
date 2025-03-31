@@ -2,11 +2,14 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +25,11 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <header
@@ -48,12 +56,36 @@ const Navbar = () => {
             User Flow
           </Link>
           <div className="flex gap-3">
-            <Button variant="outline" className="border-nexacore-teal text-white hover:bg-nexacore-teal/20">
-              Login
-            </Button>
-            <Button className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light">
-              Sign Up
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button 
+                  onClick={() => navigate("/dashboard")} 
+                  className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light"
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-nexacore-teal text-white hover:bg-nexacore-teal/20"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" className="border-nexacore-teal text-white hover:bg-nexacore-teal/20">
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </nav>
 
@@ -92,12 +124,42 @@ const Navbar = () => {
               User Flow
             </Link>
             <div className="flex flex-col gap-3 py-2">
-              <Button variant="outline" className="border-nexacore-teal text-white hover:bg-nexacore-teal/20">
-                Login
-              </Button>
-              <Button className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light">
-                Sign Up
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button 
+                    onClick={() => {
+                      navigate("/dashboard");
+                      setIsMobileMenuOpen(false);
+                    }} 
+                    className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light"
+                  >
+                    Dashboard
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-nexacore-teal text-white hover:bg-nexacore-teal/20"
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full border-nexacore-teal text-white hover:bg-nexacore-teal/20">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

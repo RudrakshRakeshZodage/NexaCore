@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   const scrollToFeatures = () => {
@@ -13,7 +14,7 @@ const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-nexacore-blue-dark overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/8963f8df-dd2d-4847-81fe-8ebbc1de127f.png')] bg-center bg-no-repeat bg-contain opacity-20"></div>
+      <div className="absolute inset-0 bg-[url('/lovable-uploads/36c062c8-cc2a-4a2e-87ec-4834f6e75483.png')] bg-center bg-no-repeat bg-contain opacity-20"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-nexacore-blue-dark via-nexacore-blue to-nexacore-blue-dark opacity-90"></div>
       
       {/* Animated Shapes */}
@@ -30,10 +31,12 @@ const Hero = () => {
           Your intelligent companion for education, health, and financial management with AI-powered insights
         </p>
         <div className="flex flex-col md:flex-row gap-4 justify-center mb-16 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-          <Button size="lg" className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light">
-            Get Started
-          </Button>
-          <Button size="lg" variant="outline" className="border-nexacore-teal text-white hover:bg-nexacore-teal/20">
+          <Link to="/signup">
+            <Button size="lg" className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light">
+              Get Started
+            </Button>
+          </Link>
+          <Button size="lg" variant="outline" className="border-nexacore-teal text-white hover:bg-nexacore-teal/20" onClick={scrollToFeatures}>
             Learn More
           </Button>
         </div>
