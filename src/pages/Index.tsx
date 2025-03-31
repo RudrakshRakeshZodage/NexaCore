@@ -1,12 +1,46 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import Features from "@/components/Features";
+import UserFlow from "@/components/UserFlow";
+import AuthSection from "@/components/AuthSection";
+import Footer from "@/components/Footer";
+import { useEffect } from "react";
 
 const Index = () => {
+  // Add framer-motion to smooth scroll to sections when navigating
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    };
+
+    // Handle hash on initial page load
+    if (window.location.hash) {
+      setTimeout(handleHashChange, 100);
+    }
+
+    // Add event listener for hash changes
+    window.addEventListener("hashchange", handleHashChange);
+    
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-nexacore-blue-dark">
+      <Navbar />
+      <Hero />
+      <Features />
+      <UserFlow />
+      <AuthSection />
+      <Footer />
     </div>
   );
 };
