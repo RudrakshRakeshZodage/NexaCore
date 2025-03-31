@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -10,7 +9,8 @@ import {
   Upload, 
   Camera, 
   FileText,
-  SmilePlus
+  SmilePlus,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,6 @@ const HealthRecommendation = ({ conditions, expenses, activity, sleep }: any) =>
     return <p className="text-white/70">Please fill out all fields to get personalized recommendations.</p>;
   }
 
-  // Mock AI recommendations based on user input
   const hasDiabetes = conditions.toLowerCase().includes('diabetes');
   const hasHypertension = conditions.toLowerCase().includes('hypertension') || conditions.toLowerCase().includes('blood pressure');
   const hasStress = conditions.toLowerCase().includes('stress') || conditions.toLowerCase().includes('anxiety');
@@ -107,7 +106,7 @@ const HealthPage = () => {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isRecommendationGenerated, setIsRecommendationGenerated] = useState(false);
-  const [facialAnalysisResult, setFacialAnalysisResult] = useState<any>(null);
+  const [facialAnalysisResult, setFacialAnalysisResult] = useState<Record<string, string>>({});
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -141,7 +140,6 @@ const HealthPage = () => {
     
     setIsAnalyzing(true);
     
-    // Mock facial analysis result
     setTimeout(() => {
       setFacialAnalysisResult({
         stressLevel: "Medium",
@@ -421,23 +419,5 @@ const HealthPage = () => {
     </DashboardLayout>
   );
 };
-
-// Missing CheckCircleIcon component
-const CheckCircleIcon = ({ size = 24 }: { size?: number }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-  </svg>
-);
 
 export default HealthPage;
