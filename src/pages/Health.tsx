@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -265,7 +266,7 @@ const HealthPage = () => {
                       {selfieFile ? (
                         <div className="text-center">
                           <div className="text-nexacore-teal mb-2">
-                            <CheckCircleIcon size={32} />
+                            <CheckCircle size={32} />
                           </div>
                           <p className="text-sm text-white">{selfieFile.name}</p>
                           <p className="text-xs text-white/70">Click to change</p>
