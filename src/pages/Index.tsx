@@ -1,6 +1,5 @@
 
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
@@ -9,33 +8,14 @@ import AuthSection from "@/components/AuthSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
-  // Add framer-motion to smooth scroll to sections when navigating
+  const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash) {
-        const element = document.querySelector(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }
-    };
-
-    // Handle hash on initial page load
-    if (window.location.hash) {
-      setTimeout(handleHashChange, 100);
-    }
-
-    // Add event listener for hash changes
-    window.addEventListener("hashchange", handleHashChange);
-    
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
+    setIsLoaded(true);
   }, []);
 
   return (
-    <div className="min-h-screen bg-nexacore-blue-dark">
+    <div className={`min-h-screen bg-nexacore-blue-dark transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
       <Navbar />
       <Hero />
       <Features />
