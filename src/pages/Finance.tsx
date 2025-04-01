@@ -1,947 +1,833 @@
 
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  PieChart, 
-  Wallet, 
-  DollarSign, 
-  TrendingUp, 
-  Briefcase, 
-  Send, 
-  Clock, 
-  CreditCard,
-  QrCode,
-  ArrowRight,
-  ReceiptText,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Eye,
-  EyeOff,
-  Plus,
-  MessageSquare,
-  Smartphone,
-  Landmark
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import DashboardLayout from "@/components/DashboardLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RadialProgress } from "@/components/ui/radial-progress";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import DashboardLayout from "@/components/DashboardLayout";
-import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Wallet, 
+  CreditCard, 
+  DollarSign, 
+  BarChart4, 
+  PiggyBank, 
+  Plus, 
+  Scan, 
+  Send, 
+  Receipt, 
+  UserPlus,
+  QrCode,
+  AlertCircleIcon
+} from "lucide-react";
 
-// Mock data
-const mockTransactions = [
-  { id: 1, type: "sent", amount: 500, to: "Rahul Sharma", date: "Today, 10:45 AM", status: "completed" },
-  { id: 2, type: "received", amount: 1200, from: "Priya Patel", date: "Yesterday, 2:30 PM", status: "completed" },
-  { id: 3, type: "sent", amount: 350, to: "Grocery Store", date: "25 Jun, 6:15 PM", status: "completed" },
-  { id: 4, type: "received", amount: 5000, from: "Salary Deposit", date: "1 Jun, 9:00 AM", status: "completed" },
-  { id: 5, type: "sent", amount: 800, to: "Rent Payment", date: "1 Jun, 11:30 AM", status: "completed" },
-  { id: 6, type: "sent", amount: 200, to: "Mobile Recharge", date: "28 May, 9:45 PM", status: "failed" },
-];
-
-// Finance recommendation component
-const FinanceRecommendation = ({ income, expenses, goals, employment }: any) => {
-  if (!income || !expenses || !goals || !employment) {
-    return <p className="text-white/70 dark:text-foreground/70">Please fill out all fields to get personalized recommendations.</p>;
-  }
-
-  // Basic calculations
-  const incomeValue = parseFloat(income) || 0;
-  const expensesValue = parseFloat(expenses) || 0;
-  const savings = Math.max(0, incomeValue - expensesValue);
-  const savingsPercentage = incomeValue > 0 ? (savings / incomeValue) * 100 : 0;
-  
-  const isLowIncome = incomeValue < 20000;
-  const isHighExpenses = expensesValue > incomeValue * 0.7;
-  const isStudent = employment === "student";
-  
-  return (
-    <div className="space-y-4 bg-nexacore-blue-dark/50 dark:bg-card/50 p-4 rounded-xl border border-white/10 dark:border-border">
-      <h3 className="text-lg font-semibold flex items-center">
-        <Wallet className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-        Financial Overview
-      </h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white/5 dark:bg-foreground/5 p-3 rounded-lg flex flex-col items-center justify-center">
-          <div className="text-sm text-white/70 dark:text-foreground/70 mb-2">Monthly Income</div>
-          <div className="text-xl font-bold text-white dark:text-foreground">₹{incomeValue.toLocaleString()}</div>
-        </div>
-        
-        <div className="bg-white/5 dark:bg-foreground/5 p-3 rounded-lg flex flex-col items-center justify-center">
-          <div className="text-sm text-white/70 dark:text-foreground/70 mb-2">Monthly Expenses</div>
-          <div className="text-xl font-bold text-white dark:text-foreground">₹{expensesValue.toLocaleString()}</div>
-        </div>
-        
-        <div className="bg-white/5 dark:bg-foreground/5 p-3 rounded-lg flex flex-col items-center justify-center">
-          <div className="text-sm text-white/70 dark:text-foreground/70 mb-2">Monthly Savings</div>
-          <div className="text-xl font-bold text-nexacore-teal dark:text-primary">₹{savings.toLocaleString()}</div>
-        </div>
-      </div>
-      
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-white/70 dark:text-foreground/70">Savings Rate</span>
-          <span className="text-sm font-medium text-white dark:text-foreground">{savingsPercentage.toFixed(1)}%</span>
-        </div>
-        <Progress value={savingsPercentage} className="h-2" />
-        <p className="text-xs text-white/60 dark:text-foreground/60">
-          {savingsPercentage < 10 
-            ? "Your savings rate is very low. Try to increase savings to at least 20% of income." 
-            : savingsPercentage < 20 
-              ? "Your savings rate is below recommended levels (20-30%)." 
-              : "Great job! You're saving at a healthy rate."}
-        </p>
-      </div>
-      
-      <div className="bg-white/5 dark:bg-foreground/5 p-3 rounded-lg space-y-3">
-        <h4 className="font-medium text-nexacore-teal dark:text-primary">AI Recommendations</h4>
-        
-        <div className="space-y-2">
-          <h5 className="text-sm font-medium text-white dark:text-foreground">Budgeting</h5>
-          <p className="text-sm text-white/80 dark:text-foreground/80">
-            {isHighExpenses 
-              ? "Your expenses are too high relative to income. Create a budget to track spending and identify areas to cut back." 
-              : "Maintain your current spending habits and consider using a budget tracking app to optimize further."}
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <h5 className="text-sm font-medium text-white dark:text-foreground">Income Opportunities</h5>
-          <ul className="space-y-1">
-            {isStudent && (
-              <>
-                <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                  <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                  Tutoring younger students (₹150-300 per hour)
-                </li>
-                <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                  <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                  Content writing for websites (₹500-1500 per article)
-                </li>
-              </>
-            )}
-            {employment === "freelancer" && (
-              <>
-                <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                  <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                  Expand your services to international platforms like Upwork or Fiverr
-                </li>
-                <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                  <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                  Create and sell digital products based on your expertise
-                </li>
-              </>
-            )}
-            {employment === "employed" && (
-              <>
-                <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                  <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                  Explore part-time consulting in your field of expertise
-                </li>
-                <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                  <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                  Develop skills for promotion or better job opportunities
-                </li>
-              </>
-            )}
-            <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-              <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-              Online surveys and user testing (₹100-500 per survey)
-            </li>
-          </ul>
-        </div>
-        
-        <div className="space-y-2">
-          <h5 className="text-sm font-medium text-white dark:text-foreground">Investment Ideas</h5>
-          {savings > 1000 ? (
-            <ul className="space-y-1">
-              <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                Start a recurring deposit (5-6% annual returns)
-              </li>
-              {savings > 5000 && (
-                <li className="text-sm text-white/80 dark:text-foreground/80 flex items-start">
-                  <ArrowRight size={12} className="mr-2 mt-1 text-nexacore-teal dark:text-primary" />
-                  Consider index funds or ETFs for long-term growth
-                </li>
-              )}
-            </ul>
-          ) : (
-            <p className="text-sm text-white/80 dark:text-foreground/80">
-              Focus on increasing savings before considering investments. Aim for at least ₹5,000 in monthly savings.
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Radial Progress Component (since we don't have it yet in the existing UI components)
-import React from "react";
-
-const FinancePage = () => {
-  const { toast } = useToast();
+const Finance = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  // Finance form state
+  // Financial details state
   const [income, setIncome] = useState("");
-  const [expenses, setExpenses] = useState("");
-  const [goals, setGoals] = useState("");
-  const [employment, setEmployment] = useState("");
-  const [isRecommendationGenerated, setIsRecommendationGenerated] = useState(false);
+  const [expenses, setExpenses] = useState<{
+    category: string;
+    amount: string;
+  }[]>([]);
+  const [newExpense, setNewExpense] = useState({
+    category: "food",
+    amount: ""
+  });
+  const [employmentStatus, setEmploymentStatus] = useState("");
+  const [financialGoals, setFinancialGoals] = useState("");
   
   // Payment system state
-  const [activePaymentTab, setActivePaymentTab] = useState("send");
-  const [showBalance, setShowBalance] = useState(true);
-  const [balance, setBalance] = useState(25000);
-  const [transactions, setTransactions] = useState(mockTransactions);
+  const [upiId, setUpiId] = useState("");
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
-  const [recipientUpiId, setRecipientUpiId] = useState("");
-  const [paymentNote, setPaymentNote] = useState("");
-  const [monthlyLimit, setMonthlyLimit] = useState(10000);
-  const [limitUsed, setLimitUsed] = useState(2850);
+  const [paymentRecipient, setPaymentRecipient] = useState("");
+  const [monthlyLimit, setMonthlyLimit] = useState("");
   
-  const handleGenerateRecommendation = () => {
-    if (!income || !expenses || !goals || !employment) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all your financial details",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsRecommendationGenerated(true);
-    toast({
-      title: "Analysis completed",
-      description: "Your financial recommendations are ready!",
-      variant: "default"
-    });
-  };
-  
-  const handleSendPayment = () => {
-    const amount = parseFloat(paymentAmount);
-    
-    if (!amount || amount <= 0) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid payment amount",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!recipientUpiId) {
-      toast({
-        title: "Missing recipient",
-        description: "Please enter recipient's UPI ID",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (amount > balance) {
-      toast({
-        title: "Insufficient funds",
-        description: "You don't have enough balance for this transaction",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Process payment
-    setBalance(prevBalance => prevBalance - amount);
-    setLimitUsed(prevLimit => prevLimit + amount);
-    
-    // Add to transactions
-    const newTransaction = {
-      id: transactions.length + 1,
+  // Transaction history
+  const [transactions, setTransactions] = useState<{
+    id: string;
+    type: "sent" | "received";
+    amount: string;
+    party: string;
+    timestamp: string;
+    status: "success" | "pending" | "failed";
+  }[]>([
+    {
+      id: "tx-001",
       type: "sent",
-      amount,
-      to: recipientUpiId,
-      date: new Date().toLocaleString(),
-      status: "completed"
-    };
-    
-    setTransactions([newTransaction, ...transactions]);
-    
-    // Reset form
-    setPaymentAmount("");
-    setRecipientUpiId("");
-    setPaymentNote("");
+      amount: "250.00",
+      party: "Ahmed Khan",
+      timestamp: "2023-07-10T14:32:45",
+      status: "success"
+    },
+    {
+      id: "tx-002",
+      type: "received",
+      amount: "1500.00",
+      party: "Mom",
+      timestamp: "2023-07-05T09:15:30",
+      status: "success"
+    },
+    {
+      id: "tx-003",
+      type: "sent",
+      amount: "125.50",
+      party: "Grocery Store",
+      timestamp: "2023-06-28T18:45:12",
+      status: "success"
+    },
+    {
+      id: "tx-004",
+      type: "sent",
+      amount: "75.00",
+      party: "Movie Tickets",
+      timestamp: "2023-06-25T20:10:05",
+      status: "failed"
+    }
+  ]);
+  
+  // AI recommendations
+  const [recommendations, setRecommendations] = useState({
+    budgeting: [
+      "Create a 50/30/20 budget: 50% needs, 30% wants, 20% savings",
+      "Track your expenses daily using a budgeting app",
+      "Cut non-essential subscriptions to save monthly",
+      "Plan meals in advance to reduce food expenses"
+    ],
+    income: [
+      "Offer tutoring services in subjects you excel at",
+      "Explore freelance opportunities on platforms like Fiverr",
+      "Consider part-time work on weekends",
+      "Sell unused items online for extra cash"
+    ],
+    investment: [
+      "Start with a small emergency fund in a high-yield savings account",
+      "Learn about low-cost index funds for long-term growth",
+      "Consider micro-investment apps to begin with small amounts",
+      "Explore digital gold or government bonds as safe investment options"
+    ],
+    savings: [
+      "Set up automatic transfers to a separate savings account",
+      "Challenge yourself to a no-spend day once a week",
+      "Save all unexpected income like gifts or bonuses",
+      "Use the 30-day rule before making large purchases"
+    ]
+  });
+  
+  // Handle adding a new expense
+  const handleAddExpense = () => {
+    if (newExpense.amount && Number(newExpense.amount) > 0) {
+      setExpenses([...expenses, { ...newExpense }]);
+      setNewExpense({
+        category: "food",
+        amount: ""
+      });
+    }
+  };
+  
+  // Handle removing an expense
+  const handleRemoveExpense = (index: number) => {
+    setExpenses(expenses.filter((_, i) => i !== index));
+  };
+  
+  // Calculate total expenses
+  const calculateTotalExpenses = () => {
+    return expenses.reduce((total, expense) => total + Number(expense.amount), 0).toFixed(2);
+  };
+  
+  // Calculate remaining budget
+  const calculateRemainingBudget = () => {
+    const totalIncome = Number(income) || 0;
+    const totalExpenses = expenses.reduce((total, expense) => total + Number(expense.amount), 0);
+    return (totalIncome - totalExpenses).toFixed(2);
+  };
+  
+  // Handle making a payment
+  const handleMakePayment = () => {
+    if (paymentAmount && paymentRecipient) {
+      const newTransaction = {
+        id: `tx-${Math.random().toString(36).substring(2, 8)}`,
+        type: "sent" as const,
+        amount: paymentAmount,
+        party: paymentRecipient,
+        timestamp: new Date().toISOString(),
+        status: "success" as const
+      };
+      
+      setTransactions([newTransaction, ...transactions]);
+      setPaymentDialogOpen(false);
+      
+      // Reset payment form
+      setPaymentAmount("");
+      setPaymentRecipient("");
+      
+      toast({
+        title: "Payment Successful",
+        description: `You sent ${paymentAmount} to ${paymentRecipient}`,
+      });
+    }
+  };
+  
+  // Handle receiving a payment
+  const handleReceivePayment = () => {
+    // In a real app, this would generate a payment link or QR code
+    setReceiveDialogOpen(false);
     
     toast({
-      title: "Payment sent",
-      description: `₹${amount} sent to ${recipientUpiId} successfully`,
-      variant: "default"
+      title: "Payment Request Created",
+      description: "Share the QR code or payment link with the sender.",
     });
   };
   
-  const handleRequestPayment = () => {
-    const amount = parseFloat(paymentAmount);
-    
-    if (!amount || amount <= 0) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid payment amount",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!recipientUpiId) {
-      toast({
-        title: "Missing payer",
-        description: "Please enter payer's UPI ID",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  // Save financial details
+  const saveFinancialDetails = () => {
     toast({
-      title: "Payment request sent",
-      description: `Request for ₹${amount} sent to ${recipientUpiId}`,
-      variant: "default"
+      title: "Financial Details Saved",
+      description: "Your financial information has been successfully saved.",
     });
-    
-    // Reset form
-    setPaymentAmount("");
-    setRecipientUpiId("");
-    setPaymentNote("");
+  };
+  
+  // Generate AI recommendations
+  const generateRecommendations = () => {
+    toast({
+      title: "Recommendations Updated",
+      description: "AI has analyzed your financial data and updated your recommendations.",
+    });
+  };
+  
+  // Transaction status badge color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "success":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
+      case "failed":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
+    }
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Finance</h1>
-            <p className="text-white/70 dark:text-foreground/70">Track your finances and manage payments</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Finance Dashboard</h1>
+            <p className="text-muted-foreground">Manage your finances and get personalized recommendations</p>
           </div>
-          <div className="h-12 w-12 rounded-full bg-nexacore-teal/20 dark:bg-primary/20 flex items-center justify-center">
-            <PieChart className="text-nexacore-teal dark:text-primary" size={24} />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={generateRecommendations}
+              className="flex items-center gap-2"
+            >
+              <BarChart4 size={16} />
+              Update Recommendations
+            </Button>
+            <Button onClick={saveFinancialDetails}>Save Financial Data</Button>
           </div>
         </div>
-
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="bg-white/10 dark:bg-foreground/10 p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">
-              Payments
-            </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">
-              History
-            </TabsTrigger>
+        
+        <Tabs defaultValue="budget" className="w-full">
+          <TabsList className="grid grid-cols-1 md:grid-cols-3 mb-8">
+            <TabsTrigger value="budget">Budget</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
           </TabsList>
           
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-6">
-                <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                  <CardHeader>
-                    <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                      <Wallet className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                      Financial Information
-                    </CardTitle>
-                    <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                      Enter your financial details for personalized advice
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="income" className="text-white dark:text-card-foreground">
-                        Monthly Income (₹)
-                      </Label>
+          {/* Budget Tab */}
+          <TabsContent value="budget" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Income & Employment</CardTitle>
+                <CardDescription>
+                  Enter your monthly income and employment status
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="income">Monthly Income</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
                       <Input 
                         id="income" 
-                        placeholder="e.g., 25000" 
-                        className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
+                        type="number" 
+                        placeholder="Enter your monthly income" 
+                        className="pl-10"
                         value={income}
                         onChange={(e) => setIncome(e.target.value)}
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="expenses" className="text-white dark:text-card-foreground">
-                        Monthly Expenses (₹)
-                      </Label>
-                      <Input 
-                        id="expenses" 
-                        placeholder="e.g., 15000" 
-                        className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                        value={expenses}
-                        onChange={(e) => setExpenses(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="goals" className="text-white dark:text-card-foreground">
-                        Financial Goals
-                      </Label>
-                      <Input 
-                        id="goals" 
-                        placeholder="e.g., Save for education, Buy a laptop" 
-                        className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                        value={goals}
-                        onChange={(e) => setGoals(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="employment" className="text-white dark:text-card-foreground">
-                        Employment Status
-                      </Label>
-                      <Select value={employment} onValueChange={setEmployment}>
-                        <SelectTrigger id="employment" className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground">
-                          <SelectValue placeholder="Select employment status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="student">Student</SelectItem>
-                          <SelectItem value="freelancer">Freelancer</SelectItem>
-                          <SelectItem value="employed">Employed</SelectItem>
-                          <SelectItem value="business_owner">Business Owner</SelectItem>
-                          <SelectItem value="unemployed">Unemployed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      onClick={handleGenerateRecommendation} 
-                      className="bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90"
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="employmentStatus">Employment Status</Label>
+                    <Select value={employmentStatus} onValueChange={setEmploymentStatus}>
+                      <SelectTrigger id="employmentStatus">
+                        <SelectValue placeholder="Select employment status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="part_time">Part-Time Employed</SelectItem>
+                        <SelectItem value="full_time">Full-Time Employed</SelectItem>
+                        <SelectItem value="freelance">Freelancer</SelectItem>
+                        <SelectItem value="unemployed">Unemployed</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Expenses</CardTitle>
+                <CardDescription>
+                  Track your monthly expenses by category
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="expenseCategory">Expense Category</Label>
+                    <Select 
+                      value={newExpense.category} 
+                      onValueChange={(value) => setNewExpense({...newExpense, category: value})}
                     >
-                      Generate Recommendations
-                    </Button>
-                  </CardFooter>
-                </Card>
-
-                {isRecommendationGenerated && (
-                  <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                    <CardHeader>
-                      <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                        <TrendingUp className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                        AI Financial Insights
-                      </CardTitle>
-                      <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                        Personalized financial recommendations based on your inputs
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <FinanceRecommendation 
-                        income={income} 
-                        expenses={expenses} 
-                        goals={goals} 
-                        employment={employment} 
+                      <SelectTrigger id="expenseCategory">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="food">Food & Groceries</SelectItem>
+                        <SelectItem value="rent">Rent & Housing</SelectItem>
+                        <SelectItem value="utilities">Utilities</SelectItem>
+                        <SelectItem value="transport">Transportation</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="entertainment">Entertainment</SelectItem>
+                        <SelectItem value="health">Healthcare</SelectItem>
+                        <SelectItem value="clothing">Clothing</SelectItem>
+                        <SelectItem value="misc">Miscellaneous</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="expenseAmount">Amount</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                      <Input 
+                        id="expenseAmount" 
+                        type="number" 
+                        placeholder="0.00" 
+                        className="pl-10"
+                        value={newExpense.amount}
+                        onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
                       />
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-
-              <div className="space-y-6">
-                <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                  <CardHeader>
-                    <div className="flex justify-between">
-                      <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                        <Wallet className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                        Balance
-                      </CardTitle>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => setShowBalance(!showBalance)}
-                        className="h-8 w-8"
-                      >
-                        {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex flex-col items-center justify-center p-6">
-                      <div className="text-3xl font-bold text-white dark:text-card-foreground">
-                        {showBalance ? `₹${balance.toLocaleString()}` : "₹•••••"}
-                      </div>
-                      <p className="text-sm text-white/70 dark:text-card-foreground/70 mt-2">
-                        Available Balance
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10 w-full">
-                          <Send size={16} className="mr-2" />
-                          Send
-                        </Button>
-                      </DialogTrigger>
-                      <Button 
-                        variant="outline" 
-                        className="border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10 w-full"
-                        onClick={() => {
-                          setActivePaymentTab("request");
-                          navigate("/finance?tab=payments");
-                        }}
-                      >
-                        <QrCode size={16} className="mr-2" />
-                        Request
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
                 
-                <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                  <CardHeader>
-                    <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                      <Clock className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                      Monthly Spending
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex flex-col items-center justify-center p-4">
-                      <div className="relative h-40 w-40">
-                        <div className="absolute inset-0 flex items-center justify-center flex-col">
-                          <span className="text-lg font-bold text-white dark:text-card-foreground">₹{limitUsed.toLocaleString()}</span>
-                          <span className="text-xs text-white/70 dark:text-card-foreground/70">of ₹{monthlyLimit.toLocaleString()}</span>
-                        </div>
-                        <svg className="h-40 w-40" viewBox="0 0 100 100">
-                          <circle
-                            className="text-white/10 dark:text-foreground/10"
-                            strokeWidth="8"
-                            stroke="currentColor"
-                            fill="transparent"
-                            r="38"
-                            cx="50"
-                            cy="50"
-                          />
-                          <circle
-                            className="text-nexacore-teal dark:text-primary"
-                            strokeWidth="8"
-                            strokeDasharray={`${(limitUsed / monthlyLimit) * 239} 239`}
-                            strokeLinecap="round"
-                            stroke="currentColor"
-                            fill="transparent"
-                            r="38"
-                            cx="50"
-                            cy="50"
-                          />
-                        </svg>
-                      </div>
-                      
-                      <div className="mt-4 text-sm text-white/80 dark:text-card-foreground/80">
-                        {(monthlyLimit - limitUsed) > 0 
-                          ? `₹${(monthlyLimit - limitUsed).toLocaleString()} remaining`
-                          : "Monthly limit reached"}
-                      </div>
+                <Button 
+                  onClick={handleAddExpense} 
+                  size="sm" 
+                  className="mt-2 flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Add Expense
+                </Button>
+                
+                {expenses.length > 0 ? (
+                  <div className="border rounded-md overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Category</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="w-[100px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {expenses.map((expense, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}
+                            </TableCell>
+                            <TableCell className="text-right">{Number(expense.amount).toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleRemoveExpense(index)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <span className="sr-only">Remove</span>
+                                <AlertCircleIcon size={16} />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow>
+                          <TableCell className="font-bold">Total</TableCell>
+                          <TableCell className="text-right font-bold">{calculateTotalExpenses()}</TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No expenses added yet.</p>
+                )}
+                
+                {income && expenses.length > 0 && (
+                  <div className="mt-4 p-4 bg-primary/10 rounded-md space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Income:</span>
+                      <span>{Number(income).toFixed(2)}</span>
                     </div>
-                    
-                    <div className="mt-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                        onClick={() => {
-                          const newLimit = parseInt(prompt("Enter new monthly limit:", monthlyLimit.toString()) || "0");
-                          if (newLimit > 0) {
-                            setMonthlyLimit(newLimit);
-                            toast({
-                              title: "Limit Updated",
-                              description: `Monthly spending limit updated to ₹${newLimit.toLocaleString()}`,
-                              variant: "default",
-                            });
-                          }
-                        }}
-                      >
-                        Adjust Monthly Limit
-                      </Button>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Expenses:</span>
+                      <span>{calculateTotalExpenses()}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+                    <div className="border-t pt-2 flex justify-between items-center">
+                      <span className="font-medium">Remaining:</span>
+                      <span className={`font-bold ${
+                        Number(calculateRemainingBudget()) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {calculateRemainingBudget()}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Financial Goals</CardTitle>
+                <CardDescription>
+                  Set your short and long-term financial goals
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label htmlFor="financialGoals">Your Financial Goals</Label>
+                  <Textarea 
+                    id="financialGoals" 
+                    placeholder="E.g. Save for a laptop, create an emergency fund, etc." 
+                    value={financialGoals}
+                    onChange={(e) => setFinancialGoals(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
-                <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                        <CreditCard className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                        Payment Center
-                      </CardTitle>
-                      <Tabs defaultValue={activePaymentTab} onValueChange={setActivePaymentTab} className="w-auto">
-                        <TabsList className="bg-white/10 dark:bg-foreground/10 h-8">
-                          <TabsTrigger value="send" className="text-xs h-6 px-2 data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">
-                            Send Money
-                          </TabsTrigger>
-                          <TabsTrigger value="request" className="text-xs h-6 px-2 data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">
-                            Request Money
-                          </TabsTrigger>
-                          <TabsTrigger value="scan" className="text-xs h-6 px-2 data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">
-                            Scan QR
-                          </TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <TabsContent value="send" className="mt-0 space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="amount" className="text-white dark:text-card-foreground">
-                          Amount (₹)
-                        </Label>
-                        <Input 
-                          id="amount" 
-                          placeholder="Enter amount" 
-                          className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          type="number"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="recipient" className="text-white dark:text-card-foreground">
-                          Recipient UPI ID
-                        </Label>
-                        <Input 
-                          id="recipient" 
-                          placeholder="e.g., name@upi" 
-                          className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                          value={recipientUpiId}
-                          onChange={(e) => setRecipientUpiId(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="note" className="text-white dark:text-card-foreground">
-                          Note (Optional)
-                        </Label>
-                        <Input 
-                          id="note" 
-                          placeholder="What's this payment for?" 
-                          className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                          value={paymentNote}
-                          onChange={(e) => setPaymentNote(e.target.value)}
-                        />
-                      </div>
-                      
-                      <Button 
-                        className="w-full bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90"
-                        onClick={handleSendPayment}
-                      >
-                        <Send className="mr-2 h-4 w-4" />
-                        Send Payment
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Payment System</CardTitle>
+                  <CardDescription>
+                    Send and receive payments via UPI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="upiId">Your UPI ID</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="upiId" 
+                        placeholder="yourname@upi" 
+                        value={upiId}
+                        onChange={(e) => setUpiId(e.target.value)}
+                      />
+                      <Button variant="outline" size="icon">
+                        <QrCode size={16} />
                       </Button>
-                    </TabsContent>
-                    
-                    <TabsContent value="request" className="mt-0 space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="req-amount" className="text-white dark:text-card-foreground">
-                          Amount (₹)
-                        </Label>
-                        <Input 
-                          id="req-amount" 
-                          placeholder="Enter amount" 
-                          className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          type="number"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="payer" className="text-white dark:text-card-foreground">
-                          Payer UPI ID
-                        </Label>
-                        <Input 
-                          id="payer" 
-                          placeholder="e.g., name@upi" 
-                          className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                          value={recipientUpiId}
-                          onChange={(e) => setRecipientUpiId(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="req-note" className="text-white dark:text-card-foreground">
-                          Note (Optional)
-                        </Label>
-                        <Input 
-                          id="req-note" 
-                          placeholder="What's this request for?" 
-                          className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground" 
-                          value={paymentNote}
-                          onChange={(e) => setPaymentNote(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <Button 
-                          className="bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90"
-                          onClick={handleRequestPayment}
-                        >
-                          <ReceiptText className="mr-2 h-4 w-4" />
-                          Request Payment
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          className="border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                          onClick={() => {
-                            setActivePaymentTab("scan");
-                          }}
-                        >
-                          <QrCode className="mr-2 h-4 w-4" />
-                          Show My QR
-                        </Button>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="scan" className="mt-0 space-y-4">
-                      <div className="flex flex-col items-center justify-center p-6">
-                        <div className="bg-white p-4 rounded-lg mb-4">
-                          <div className="w-48 h-48 bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=example@upi&pn=NexaCore&am=0&cu=INR')] bg-no-repeat bg-center bg-contain"></div>
-                        </div>
-                        <h3 className="text-lg font-medium text-white dark:text-card-foreground">Your Payment QR Code</h3>
-                        <p className="text-sm text-white/70 dark:text-card-foreground/70 mt-1">user@nexacore</p>
-                        
-                        <div className="flex gap-3 mt-4">
-                          <Button variant="outline" className="border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10">
-                            <Download className="mr-2 h-4 w-4" />
-                            Download QR
-                          </Button>
-                          <Button variant="outline" className="border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10">
-                            <Share className="mr-2 h-4 w-4" />
-                            Share
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </CardContent>
-                </Card>
-              </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Link your UPI ID to make and receive payments
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <Button 
+                      onClick={() => setPaymentDialogOpen(true)} 
+                      className="flex items-center gap-2"
+                    >
+                      <Send size={16} />
+                      Send Money
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setReceiveDialogOpen(true)} 
+                      className="flex items-center gap-2"
+                    >
+                      <Receipt size={16} />
+                      Receive Money
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
               
-              <div>
-                <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                  <CardHeader>
-                    <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                      <Landmark className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                      Banking Services
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center h-auto py-4 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                        onClick={() => {
-                          toast({
-                            title: "Feature Coming Soon",
-                            description: "Mobile recharge will be available in the next update",
-                            variant: "default",
-                          });
-                        }}
-                      >
-                        <Smartphone className="h-6 w-6 mb-2" />
-                        <span className="text-xs">Mobile Recharge</span>
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center h-auto py-4 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                        onClick={() => {
-                          toast({
-                            title: "Feature Coming Soon",
-                            description: "Bill payments will be available in the next update",
-                            variant: "default",
-                          });
-                        }}
-                      >
-                        <Receipt className="h-6 w-6 mb-2" />
-                        <span className="text-xs">Bill Payment</span>
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center h-auto py-4 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                        onClick={() => {
-                          toast({
-                            title: "Feature Coming Soon",
-                            description: "Gold investments will be available in the next update",
-                            variant: "default",
-                          });
-                        }}
-                      >
-                        <CircleDollarSign className="h-6 w-6 mb-2" />
-                        <span className="text-xs">Invest in Gold</span>
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="flex flex-col items-center justify-center h-auto py-4 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                        onClick={() => {
-                          toast({
-                            title: "Feature Coming Soon",
-                            description: "Fixed deposits will be available in the next update",
-                            variant: "default",
-                          });
-                        }}
-                      >
-                        <PiggyBank className="h-6 w-6 mb-2" />
-                        <span className="text-xs">Fixed Deposit</span>
-                      </Button>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Limits</CardTitle>
+                  <CardDescription>
+                    Set monthly spending limits
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="monthlyLimit">Monthly Limit</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                      <Input 
+                        id="monthlyLimit" 
+                        type="number" 
+                        placeholder="Set a monthly limit" 
+                        className="pl-10"
+                        value={monthlyLimit}
+                        onChange={(e) => setMonthlyLimit(e.target.value)}
+                      />
                     </div>
-                    
-                    <div className="bg-white/5 dark:bg-foreground/5 p-4 rounded-lg border-l-2 border-nexacore-orange dark:border-accent">
-                      <h3 className="text-sm font-medium text-white dark:text-card-foreground flex items-center">
-                        <AlertCircle className="mr-2 h-4 w-4 text-nexacore-orange dark:text-accent" />
-                        Important Note
-                      </h3>
-                      <p className="text-sm text-white/70 dark:text-card-foreground/70 mt-2">
-                        This is a simulated payment system for demonstration purposes. In a production app, real UPI transactions would be integrated.
+                  </div>
+                  
+                  {monthlyLimit && transactions.length > 0 && (
+                    <div className="space-y-2 mt-4">
+                      <div className="flex justify-between text-sm">
+                        <span>Spent this month</span>
+                        <span>
+                          {transactions
+                            .filter(tx => tx.type === "sent" && new Date(tx.timestamp).getMonth() === new Date().getMonth())
+                            .reduce((sum, tx) => sum + Number(tx.amount), 0).toFixed(2)
+                          }
+                        </span>
+                      </div>
+                      
+                      <Progress 
+                        value={(transactions
+                          .filter(tx => tx.type === "sent" && new Date(tx.timestamp).getMonth() === new Date().getMonth())
+                          .reduce((sum, tx) => sum + Number(tx.amount), 0) / Number(monthlyLimit)) * 100
+                        } 
+                        className="h-2"
+                      />
+                      
+                      <p className="text-xs text-muted-foreground">
+                        {Number(monthlyLimit) - transactions
+                          .filter(tx => tx.type === "sent" && new Date(tx.timestamp).getMonth() === new Date().getMonth())
+                          .reduce((sum, tx) => sum + Number(tx.amount), 0) > 0 
+                          ? `${(Number(monthlyLimit) - transactions
+                              .filter(tx => tx.type === "sent" && new Date(tx.timestamp).getMonth() === new Date().getMonth())
+                              .reduce((sum, tx) => sum + Number(tx.amount), 0)).toFixed(2)} remaining this month`
+                          : "Monthly limit exceeded"
+                        }
                       </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-          </TabsContent>
-          
-          {/* Transaction History Tab */}
-          <TabsContent value="history" className="space-y-4">
-            <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
+            
+            <Card>
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                    <Clock className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                    Transaction History
-                  </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                    onClick={() => {
-                      toast({
-                        title: "Download Started",
-                        description: "Your transaction history is being downloaded",
-                        variant: "default",
-                      });
-                    }}
-                  >
-                    <Download className="mr-1 h-3 w-3" />
-                    Export CSV
-                  </Button>
-                </div>
+                <CardTitle>Transaction History</CardTitle>
+                <CardDescription>
+                  View your recent transactions
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border border-white/10 dark:border-foreground/10 overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-white/5 dark:bg-foreground/5">
-                      <TableRow className="hover:bg-white/5 dark:hover:bg-foreground/5 border-white/10 dark:border-foreground/10">
-                        <TableHead className="text-white dark:text-card-foreground font-medium">Transaction</TableHead>
-                        <TableHead className="text-white dark:text-card-foreground font-medium">Amount</TableHead>
-                        <TableHead className="text-white dark:text-card-foreground font-medium">Date</TableHead>
-                        <TableHead className="text-white dark:text-card-foreground font-medium text-right">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {transactions.length === 0 ? (
-                        <TableRow className="hover:bg-white/5 dark:hover:bg-foreground/5 border-white/10 dark:border-foreground/10">
-                          <TableCell colSpan={4} className="text-center text-white/70 dark:text-card-foreground/70 py-4">
-                            No transactions yet
-                          </TableCell>
+                {transactions.length > 0 ? (
+                  <div className="border rounded-md overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead>Status</TableHead>
                         </TableRow>
-                      ) : (
-                        transactions.map((transaction) => (
-                          <TableRow key={transaction.id} className="hover:bg-white/5 dark:hover:bg-foreground/5 border-white/10 dark:border-foreground/10">
+                      </TableHeader>
+                      <TableBody>
+                        {transactions.map((transaction) => (
+                          <TableRow key={transaction.id}>
                             <TableCell>
-                              <div className="flex items-center">
-                                <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${
-                                  transaction.type === "sent" 
-                                    ? "bg-red-500/20 text-red-400" 
-                                    : "bg-green-500/20 text-green-400"
-                                }`}>
-                                  {transaction.type === "sent" ? (
-                                    <ArrowUpRight size={16} />
-                                  ) : (
-                                    <ArrowDownLeft size={16} />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-white dark:text-card-foreground">
-                                    {transaction.type === "sent" ? `To: ${transaction.to}` : `From: ${transaction.from}`}
-                                  </p>
-                                  <p className="text-xs text-white/60 dark:text-card-foreground/60">
-                                    {transaction.type === "sent" ? "Payment sent" : "Payment received"}
-                                  </p>
-                                </div>
-                              </div>
+                              {new Date(transaction.timestamp).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
-                              <span className={`font-medium ${
-                                transaction.type === "sent" 
-                                  ? "text-red-400" 
-                                  : "text-green-400"
-                              }`}>
-                                {transaction.type === "sent" ? "-" : "+"}₹{transaction.amount.toLocaleString()}
-                              </span>
+                              {transaction.type === "sent" ? `To: ${transaction.party}` : `From: ${transaction.party}`}
+                            </TableCell>
+                            <TableCell className={`text-right ${
+                              transaction.type === "received" ? "text-green-600 dark:text-green-400" : ""
+                            }`}>
+                              {transaction.type === "received" ? "+" : "-"}{transaction.amount}
                             </TableCell>
                             <TableCell>
-                              <span className="text-sm text-white/70 dark:text-card-foreground/70">
-                                {transaction.date}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                transaction.status === "completed" 
-                                  ? "bg-green-500/10 text-green-400" 
-                                  : transaction.status === "pending"
-                                    ? "bg-yellow-500/10 text-yellow-400"
-                                    : "bg-red-500/10 text-red-400"
-                              }`}>
+                              <Badge className={getStatusColor(transaction.status)}>
                                 {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                              </span>
+                              </Badge>
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+                )}
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <div className="text-sm text-white/70 dark:text-card-foreground/70">
-                  Showing {transactions.length} transactions
-                </div>
+            </Card>
+          </TabsContent>
+          
+          {/* AI Recommendations Tab */}
+          <TabsContent value="recommendations" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PiggyBank size={18} />
+                    Budgeting Tips
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recommendations.budgeting.map((tip, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="bg-primary/20 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center mt-0.5">
+                          {index + 1}
+                        </span>
+                        <p>{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wallet size={18} />
+                    Income Generation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recommendations.income.map((tip, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="bg-primary/20 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center mt-0.5">
+                          {index + 1}
+                        </span>
+                        <p>{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart4 size={18} />
+                    Investment Ideas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recommendations.investment.map((tip, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="bg-primary/20 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center mt-0.5">
+                          {index + 1}
+                        </span>
+                        <p>{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign size={18} />
+                    Savings Strategies
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recommendations.savings.map((tip, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="bg-primary/20 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center mt-0.5">
+                          {index + 1}
+                        </span>
+                        <p>{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Personalized Financial Plan</CardTitle>
+                <CardDescription>
+                  Get a detailed financial plan based on your data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pb-2">
+                <p className="text-sm text-muted-foreground">
+                  Our AI can generate a comprehensive financial plan tailored to your specific situation, 
+                  including budgeting strategies, saving goals, and investment recommendations.
+                </p>
+              </CardContent>
+              <CardFooter>
                 <Button 
-                  variant="link" 
-                  className="text-nexacore-teal dark:text-primary"
+                  variant="outline" 
+                  onClick={() => navigate('/reports')}
+                  className="flex items-center gap-2"
                 >
-                  View All Transactions
+                  <FileTextIcon size={16} />
+                  Generate Financial Report
                 </Button>
               </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Send Money Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Money</DialogTitle>
+            <DialogDescription>
+              Send money to friends, family, or businesses
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentAmount">Amount</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                <Input 
+                  id="paymentAmount" 
+                  type="number" 
+                  placeholder="0.00" 
+                  className="pl-10"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="paymentRecipient">Recipient</Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="paymentRecipient" 
+                  placeholder="Name or UPI ID" 
+                  value={paymentRecipient}
+                  onChange={(e) => setPaymentRecipient(e.target.value)}
+                />
+                <Button variant="outline" size="icon">
+                  <UserPlus size={16} />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox id="saveRecipient" />
+              <label
+                htmlFor="saveRecipient"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Save recipient for future payments
+              </label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleMakePayment} disabled={!paymentAmount || !paymentRecipient}>
+              Send Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Receive Money Dialog */}
+      <Dialog open={receiveDialogOpen} onOpenChange={setReceiveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Receive Money</DialogTitle>
+            <DialogDescription>
+              Generate a payment request link or QR code
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="receiveAmount">Request Amount (Optional)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                <Input 
+                  id="receiveAmount" 
+                  type="number" 
+                  placeholder="0.00" 
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-4 flex items-center justify-center">
+              <div className="w-48 h-48 bg-primary/10 flex items-center justify-center">
+                <QrCode size={120} className="text-primary" />
+              </div>
+            </div>
+            
+            <div className="flex justify-center">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Scan size={16} />
+                Scan to Pay
+              </Button>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReceiveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleReceivePayment}>
+              Create Payment Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
 
-export default FinancePage;
-
-// Additional imports for the Finance page
-import { PiggyBank, Download, Share, Receipt, CircleDollarSign } from "lucide-react";
+export default Finance;

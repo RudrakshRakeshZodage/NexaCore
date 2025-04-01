@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Index from "./pages/Index";
@@ -21,7 +21,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Protected route component
+// Protected route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -59,27 +59,62 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const AppRoutes = () => (
-  <Routes>
-    {/* Public routes */}
-    <Route path="/" element={<Index />} />
-    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-    <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-    <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-    
-    {/* Protected routes */}
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
-    <Route path="/health" element={<ProtectedRoute><Health /></ProtectedRoute>} />
-    <Route path="/finance" element={<ProtectedRoute><Finance /></ProtectedRoute>} />
-    <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-    
-    {/* Catch-all route */}
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+// Create router with all routes
+const router = createBrowserRouter([
+  // Public routes
+  {
+    path: "/",
+    element: <Index />
+  },
+  {
+    path: "/login",
+    element: <PublicRoute><Login /></PublicRoute>
+  },
+  {
+    path: "/signup",
+    element: <PublicRoute><Signup /></PublicRoute>
+  },
+  {
+    path: "/forgot-password",
+    element: <PublicRoute><ForgotPassword /></PublicRoute>
+  },
+  
+  // Protected routes
+  {
+    path: "/dashboard",
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>
+  },
+  {
+    path: "/education",
+    element: <ProtectedRoute><Education /></ProtectedRoute>
+  },
+  {
+    path: "/health",
+    element: <ProtectedRoute><Health /></ProtectedRoute>
+  },
+  {
+    path: "/finance",
+    element: <ProtectedRoute><Finance /></ProtectedRoute>
+  },
+  {
+    path: "/reports",
+    element: <ProtectedRoute><Reports /></ProtectedRoute>
+  },
+  {
+    path: "/profile",
+    element: <ProtectedRoute><Profile /></ProtectedRoute>
+  },
+  {
+    path: "/settings",
+    element: <ProtectedRoute><Settings /></ProtectedRoute>
+  },
+  
+  // Catch-all route
+  {
+    path: "*",
+    element: <NotFound />
+  }
+]);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -87,11 +122,9 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
