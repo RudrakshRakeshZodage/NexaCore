@@ -11,41 +11,120 @@ import {
   Heart, 
   Zap, 
   Clock,
-  Settings
+  Settings,
+  Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useReportGenerator } from "@/lib/reportGenerator";
+import { useN8nAutomation } from "@/lib/automationHelpers";
+import AutomationAlert from "@/components/AutomationAlert";
 
 const Reports = () => {
   const { toast } = useToast();
+  const { generateUserReport } = useReportGenerator();
+  const { triggerAutomation } = useN8nAutomation();
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [automationEnabled, setAutomationEnabled] = useState(true);
   const [scheduleInterval, setScheduleInterval] = useState("weekly");
+  const [reportPreview, setReportPreview] = useState<{ type: string; text: string; url: string } | null>(null);
+  const [showAutomationAlert, setShowAutomationAlert] = useState(true);
   
-  const handleGenerateReport = (type: string) => {
+  // Mock data for reports - in a real app, this would come from a context or API
+  const mockUserData = {
+    education: {
+      currentLevel: "Bachelor's Degree",
+      field: "Computer Science",
+      completedCourses: ["Introduction to Programming", "Data Structures"],
+      goals: ["Learn Machine Learning", "Get certified in Web Development"]
+    },
+    health: {
+      age: 25,
+      weight: 70,
+      height: 175,
+      conditions: ["Occasional stress"],
+      sleepHours: 7,
+      exerciseFrequency: "3 times per week"
+    },
+    emotionAnalysis: {
+      stress: "medium",
+      mood: "positive",
+      fatigue: "low"
+    },
+    finance: {
+      income: 45000,
+      savings: 5000,
+      expenses: {
+        housing: 12000,
+        food: 5000,
+        transportation: 3000,
+        entertainment: 2000
+      },
+      goals: ["Build emergency fund", "Start investing"]
+    }
+  };
+  
+  const handleGenerateReport = async (type: string) => {
     setIsGeneratingReport(true);
     
-    // Simulate report generation
-    setTimeout(() => {
+    try {
+      const result = await generateUserReport(
+        mockUserData, 
+        type as "education" | "health" | "finance" | "comprehensive",
+        {
+          showToast: true,
+          onSuccess: (report) => {
+            setReportPreview({
+              type,
+              text: report.reportText,
+              url: report.reportUrl
+            });
+          }
+        }
+      );
+      
+      // Also trigger automation if enabled
+      if (automationEnabled) {
+        triggerAutomation(
+          "https://your-n8n-instance/webhook/report-notification",
+          {
+            reportType: type,
+            generatedAt: new Date().toISOString(),
+            userData: mockUserData
+          },
+          {
+            successMessage: "Report automation workflow triggered"
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Report generation error:", error);
+    } finally {
       setIsGeneratingReport(false);
-      toast({
-        title: "Report Generated",
-        description: `Your ${type} report has been successfully created`,
-        variant: "default",
-      });
-    }, 2000);
+    }
   };
   
   const handleDownloadReport = (type: string) => {
+    // In a real application, this would download the actual PDF
+    // For now, we'll just show a toast
     toast({
       title: "Downloading Report",
       description: `Your ${type} report is being downloaded`,
       variant: "default",
     });
+    
+    // Simulate download by opening the URL in a new tab
+    if (reportPreview && reportPreview.type === type) {
+      window.open(reportPreview.url, '_blank');
+    } else {
+      // If no preview exists, generate one first
+      handleGenerateReport(type);
+    }
   };
 
   const handleScheduleToggle = () => {
@@ -58,6 +137,11 @@ const Reports = () => {
         : "Your reports will be automatically generated based on your schedule",
       variant: "default",
     });
+  };
+
+  const handleConfigureAutomation = () => {
+    // Navigate to settings page with automation tab selected
+    window.location.href = "/settings?tab=automation";
   };
   
   const renderReportCard = (title: string, icon: React.ReactNode, description: string, type: string) => (
@@ -76,7 +160,7 @@ const Reports = () => {
           <Activity size={48} className="text-white/30" />
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex flex-wrap gap-2">
         <Button 
           variant="outline" 
           className="border-white/20 text-white hover:bg-white/10"
@@ -85,6 +169,18 @@ const Reports = () => {
           <Download size={16} className="mr-2" />
           Download
         </Button>
+        
+        {reportPreview && reportPreview.type === type && (
+          <Button 
+            variant="outline" 
+            className="border-white/20 text-white hover:bg-white/10"
+            onClick={() => setReportPreview(reportPreview)}
+          >
+            <Eye size={16} className="mr-2" />
+            Preview
+          </Button>
+        )}
+        
         <Button 
           className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
           onClick={() => handleGenerateReport(type)}
@@ -121,6 +217,12 @@ const Reports = () => {
             <FileText className="text-nexacore-teal" size={24} />
           </div>
         </div>
+
+        <AutomationAlert 
+          isVisible={showAutomationAlert}
+          onClose={() => setShowAutomationAlert(false)}
+          onConfigure={handleConfigureAutomation}
+        />
 
         <Card className="bg-nexacore-blue-dark/50 border-white/10">
           <CardHeader>
@@ -282,6 +384,45 @@ const Reports = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Report Preview Dialog */}
+        <Dialog open={!!reportPreview} onOpenChange={(open) => !open && setReportPreview(null)}>
+          <DialogContent className="bg-nexacore-blue-dark text-white border-nexacore-teal/30 max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl text-nexacore-teal">
+                {reportPreview?.type?.charAt(0).toUpperCase() + reportPreview?.type?.slice(1)} Report Preview
+              </DialogTitle>
+              <DialogDescription className="text-white/70">
+                Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
+              </DialogDescription>
+            </DialogHeader>
+
+            {reportPreview && (
+              <div className="space-y-4 mt-4">
+                <div className="bg-white/5 p-6 rounded-lg whitespace-pre-line">
+                  {reportPreview.text}
+                </div>
+                
+                <div className="flex justify-end gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="border-white/20 text-white hover:bg-white/10"
+                    onClick={() => setReportPreview(null)}
+                  >
+                    Close
+                  </Button>
+                  <Button 
+                    className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
+                    onClick={() => window.open(reportPreview.url, '_blank')}
+                  >
+                    <Download size={16} className="mr-2" />
+                    Download PDF
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

@@ -60,18 +60,22 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => (
   <Routes>
+    {/* Public routes */}
     <Route path="/" element={<Index />} />
     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
     <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
     <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+    
+    {/* Protected routes - All dashboard related pages are now tabs within the dashboard */}
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
-    <Route path="/health" element={<ProtectedRoute><Health /></ProtectedRoute>} />
-    <Route path="/finance" element={<ProtectedRoute><Finance /></ProtectedRoute>} />
+    <Route path="/education" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/health" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/finance" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+    
+    {/* Catch-all route */}
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
