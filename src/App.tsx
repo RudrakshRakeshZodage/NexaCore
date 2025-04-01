@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -26,7 +27,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-nexacore-blue-dark flex items-center justify-center">
+      <div className="min-h-screen bg-nexacore-blue-dark dark:bg-background flex items-center justify-center">
         <div className="animate-pulse text-white">Loading...</div>
       </div>
     );
@@ -45,7 +46,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-nexacore-blue-dark flex items-center justify-center">
+      <div className="min-h-screen bg-nexacore-blue-dark dark:bg-background flex items-center justify-center">
         <div className="animate-pulse text-white">Loading...</div>
       </div>
     );
@@ -66,11 +67,11 @@ const AppRoutes = () => (
     <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
     <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
     
-    {/* Protected routes - All dashboard related pages are now tabs within the dashboard */}
+    {/* Protected routes */}
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/education" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/health" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/finance" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
+    <Route path="/health" element={<ProtectedRoute><Health /></ProtectedRoute>} />
+    <Route path="/finance" element={<ProtectedRoute><Finance /></ProtectedRoute>} />
     <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -82,15 +83,17 @@ const AppRoutes = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

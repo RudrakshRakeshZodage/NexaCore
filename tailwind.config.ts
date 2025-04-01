@@ -1,7 +1,8 @@
 
+import { fontFamily } from "tailwindcss/defaultTheme";
 import type { Config } from "tailwindcss";
 
-export default {
+const config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -53,23 +54,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom NexaCore colors
-        "nexacore-blue": {
-          DEFAULT: "#102846", 
-          dark: "#071530",
-          light: "#1d3f68"
+        // NexaCore color palette
+        nexacore: {
+          "blue-dark": "#061123",
+          "blue": "#102a4c",
+          "teal": "#00c6be",
+          "teal-light": "#5eede8",
+          "orange": "#ff8a50",
+          "pink": "#ff5088",
         },
-        "nexacore-teal": {
-          DEFAULT: "#36D1DC",
-          light: "#5EEBFF"
-        },
-        "nexacore-pink": "#F56FAD",
-        "nexacore-orange": "#FF8C42"
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["Inter var", ...fontFamily.sans],
       },
       keyframes: {
         "accordion-down": {
@@ -95,22 +96,24 @@ export default {
             opacity: "1"
           },
           "50%": {
-            opacity: "0.5"
+            opacity: "0.7"
           }
-        }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in-up": "fade-in-up 0.5s ease-out forwards",
-        "pulse": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+        "pulse": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       backgroundImage: {
-        "gradient-nexacore": "linear-gradient(to right, #36D1DC, #5B86E5, #F56FAD)",
-        "gradient-nexacore-dark": "linear-gradient(to bottom, #102846, #071530)",
-        "gradient-nexacore-card": "linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03))"
-      }
+        "gradient-nexacore": "linear-gradient(to right, #00c6be, #ff5088)",
+        "gradient-nexacore-dark": "linear-gradient(to bottom, #102a4c, #061123)",
+        "gradient-nexacore-card": "linear-gradient(135deg, rgba(16, 42, 76, 0.8), rgba(6, 17, 35, 0.9))",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
+export default config;
