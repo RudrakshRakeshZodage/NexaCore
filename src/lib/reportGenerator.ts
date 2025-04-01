@@ -168,7 +168,8 @@ const generatePdfFromText = async (
   }
   
   // Add footer
-  const pageCount = doc.internal.getNumberOfPages();
+  // Fixed: Using the correct API for getting page count
+  const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);

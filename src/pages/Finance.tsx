@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -18,7 +19,9 @@ import {
   Download,
   RefreshCw,
   ChevronRight,
-  FileText
+  FileText,
+  Filter,
+  CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -346,8 +349,8 @@ const Finance = () => {
                     <Label htmlFor="type" className="text-right">
                       Type
                     </Label>
-                    <Select value={transactionType} onValueChange={setTransactionType} className="col-span-3">
-                      <SelectTrigger className="bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground">
+                    <Select value={transactionType} onValueChange={setTransactionType}>
+                      <SelectTrigger className="col-span-3 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -405,6 +408,7 @@ const Finance = () => {
                             date > new Date()
                           }
                           initialFocus
+                          className={cn("p-3 pointer-events-auto")}
                         />
                       </PopoverContent>
                     </Popover>
@@ -589,11 +593,5 @@ const Finance = () => {
     </DashboardLayout>
   );
 };
-
-// Import necessary types
-import {
-  Filter,
-  CalendarDays
-} from "lucide-react";
 
 export default Finance;
