@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Index from "./pages/Index";
@@ -59,63 +59,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Create router with all routes
-const router = createBrowserRouter([
-  // Public routes
-  {
-    path: "/",
-    element: <Index />
-  },
-  {
-    path: "/login",
-    element: <PublicRoute><Login /></PublicRoute>
-  },
-  {
-    path: "/signup",
-    element: <PublicRoute><Signup /></PublicRoute>
-  },
-  {
-    path: "/forgot-password",
-    element: <PublicRoute><ForgotPassword /></PublicRoute>
-  },
-  
-  // Protected routes
-  {
-    path: "/dashboard",
-    element: <ProtectedRoute><Dashboard /></ProtectedRoute>
-  },
-  {
-    path: "/education",
-    element: <ProtectedRoute><Education /></ProtectedRoute>
-  },
-  {
-    path: "/health",
-    element: <ProtectedRoute><Health /></ProtectedRoute>
-  },
-  {
-    path: "/finance",
-    element: <ProtectedRoute><Finance /></ProtectedRoute>
-  },
-  {
-    path: "/reports",
-    element: <ProtectedRoute><Reports /></ProtectedRoute>
-  },
-  {
-    path: "/profile",
-    element: <ProtectedRoute><Profile /></ProtectedRoute>
-  },
-  {
-    path: "/settings",
-    element: <ProtectedRoute><Settings /></ProtectedRoute>
-  },
-  
-  // Catch-all route
-  {
-    path: "*",
-    element: <NotFound />
-  }
-]);
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
@@ -123,7 +66,25 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <RouterProvider router={router} />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            
+            {/* Protected routes */}
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/education" element={<ProtectedRoute><Education /></ProtectedRoute>} />
+            <Route path="/health" element={<ProtectedRoute><Health /></ProtectedRoute>} />
+            <Route path="/finance" element={<ProtectedRoute><Finance /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
