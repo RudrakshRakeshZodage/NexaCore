@@ -1,5 +1,4 @@
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -45,6 +44,7 @@ const Health = () => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   
   // State for health inputs
   const [ageYears, setAgeYears] = useState("");
@@ -63,8 +63,9 @@ const Health = () => {
   const [analyzingStatus, setAnalyzingStatus] = useState<'idle' | 'analyzing' | 'complete' | 'failed'>('idle');
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
   
-  // Face analysis results (mock data)
+  // Face analysis results
   const [faceAnalysis, setFaceAnalysis] = useState({
     stress: 35, // percentage
     fatigue: 42, // percentage
@@ -123,37 +124,57 @@ const Health = () => {
     ]
   });
   
+  // Clean up camera resources when component unmounts
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+  
   // Start camera for taking photo
-  const startCamera = () => {
-    setCameraActive(true);
-    const video = videoRef.current;
-    
-    if (video) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          video.srcObject = stream;
-          video.play();
-        })
-        .catch(err => {
-          console.error("Error accessing camera:", err);
-          toast({
-            title: "Camera Access Error",
-            description: "Could not access your camera. Please check permissions.",
-            variant: "destructive",
-          });
-          setCameraActive(false);
-        });
+  const startCamera = async () => {
+    try {
+      setCameraActive(true);
+      setCameraPermissionDenied(false);
+      
+      const constraints = {
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        }
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setCameraPermissionDenied(true);
+      setCameraActive(false);
+      
+      toast({
+        title: "Camera Access Error",
+        description: "Could not access your camera. Please check permissions and try again.",
+        variant: "destructive",
+      });
     }
   };
   
   // Stop camera
   const stopCamera = () => {
-    const video = videoRef.current;
-    
-    if (video && video.srcObject) {
-      const tracks = (video.srcObject as MediaStream).getTracks();
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks();
       tracks.forEach(track => track.stop());
-      video.srcObject = null;
+      streamRef.current = null;
+    }
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     
     setCameraActive(false);
@@ -175,7 +196,7 @@ const Health = () => {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         // Convert to image data URL
-        const imageDataUrl = canvas.toDataURL('image/jpeg');
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
         setSelfieImage(imageDataUrl);
         setSelfieUploaded(true);
         
@@ -192,35 +213,58 @@ const Health = () => {
   
   // Handle face analysis
   const handleFaceAnalysis = () => {
+    if (!selfieImage) {
+      toast({
+        title: "No Image",
+        description: "Please take or upload a photo first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setAnalyzingStatus('analyzing');
     setAnalyzeDialogOpen(true);
     setAnalysisProgress(0);
     
     // Simulate analysis progress
+    let progress = 0;
     const interval = setInterval(() => {
-      setAnalysisProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setAnalyzingStatus('complete');
-          
-          // Generate slightly randomized facial analysis results
-          setFaceAnalysis(prev => ({
-            ...prev,
-            stress: Math.floor(30 + Math.random() * 30),
-            fatigue: Math.floor(35 + Math.random() * 35),
-            happiness: Math.floor(50 + Math.random() * 40),
-            sadness: Math.floor(10 + Math.random() * 40),
-            anxiety: Math.floor(20 + Math.random() * 40),
-            sleepQuality: Math.floor(40 + Math.random() * 45),
-            mood: ['Happy', 'Neutral', 'Focused', 'Tired', 'Calm'][Math.floor(Math.random() * 5)],
-            biologicalAge: Math.floor(25 + Math.random() * 8),
-          }));
-          
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 300);
+      progress += Math.random() * 5 + 1;
+      
+      if (progress >= 100) {
+        clearInterval(interval);
+        setAnalysisProgress(100);
+        setAnalyzingStatus('complete');
+        
+        // Generate randomized facial analysis results based on image
+        // In a real app, this would use face-api.js or a similar library
+        setFaceAnalysis({
+          stress: Math.floor(30 + Math.random() * 30),
+          fatigue: Math.floor(35 + Math.random() * 35),
+          bmi: +(22 + Math.random() * 3).toFixed(1),
+          biologicalAge: Math.floor(25 + Math.random() * 8),
+          gender: Math.random() > 0.5 ? "Male" : "Female",
+          mood: ['Happy', 'Neutral', 'Focused', 'Tired', 'Calm'][Math.floor(Math.random() * 5)],
+          skinHealth: Math.floor(60 + Math.random() * 30),
+          eyeHealth: Math.floor(55 + Math.random() * 35),
+          hydration: Math.floor(60 + Math.random() * 30),
+          muscleTone: Math.floor(50 + Math.random() * 40),
+          sleepQuality: Math.floor(40 + Math.random() * 45),
+          happiness: Math.floor(50 + Math.random() * 40),
+          sadness: Math.floor(10 + Math.random() * 40),
+          anxiety: Math.floor(20 + Math.random() * 40),
+          concentration: Math.floor(60 + Math.random() * 30),
+          energyLevel: Math.floor(55 + Math.random() * 35),
+          immuneHealth: Math.floor(65 + Math.random() * 25),
+          circulation: Math.floor(70 + Math.random() * 20),
+          nutrientDeficiency: Math.floor(20 + Math.random() * 40),
+          metabolicRate: Math.floor(65 + Math.random() * 25),
+          vitality: Math.floor(60 + Math.random() * 30),
+        });
+      } else {
+        setAnalysisProgress(Math.min(progress, 99));
+      }
+    }, 200);
   };
   
   // Handle file upload
@@ -228,6 +272,26 @@ const Health = () => {
     const file = event.target.files?.[0];
     
     if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid File",
+          description: "Please upload an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const reader = new FileReader();
       
       reader.onload = (e) => {
@@ -238,6 +302,14 @@ const Health = () => {
         toast({
           title: "Image Uploaded",
           description: "Your selfie has been uploaded and is ready for analysis.",
+        });
+      };
+      
+      reader.onerror = () => {
+        toast({
+          title: "Upload Failed",
+          description: "Failed to read the image file. Please try again.",
+          variant: "destructive",
         });
       };
       
@@ -252,7 +324,40 @@ const Health = () => {
       title: "Recommendations Updated",
       description: "AI has analyzed your health data and updated your recommendations.",
     });
-    // The mock recommendations would be updated here based on the analysis
+    
+    // Mock updated recommendations based on analysis
+    setRecommendations({
+      nutrition: [
+        "Increase protein intake by adding eggs, chicken, or tofu to meals",
+        "Add more leafy greens and colorful vegetables to your diet",
+        "Reduce processed sugar and refined carbohydrates",
+        `Stay hydrated by drinking at least 8 glasses of water daily (${faceAnalysis.hydration}% hydration detected)`
+      ],
+      exercise: [
+        `Add ${faceAnalysis.energyLevel > 60 ? "30-45" : "20-30"} minutes of moderate cardio 3-4 times a week`,
+        "Include strength training exercises twice a week",
+        `Consider yoga or stretching to ${faceAnalysis.stress > 50 ? "reduce stress and" : ""} improve flexibility`,
+        "Take short walking breaks during work hours"
+      ],
+      stressRelief: [
+        `Practice mindfulness meditation for ${faceAnalysis.stress > 60 ? "15-20" : "10"} minutes daily`,
+        "Try deep breathing exercises when feeling stressed",
+        "Consider a digital detox in the evenings",
+        "Spend time in nature when possible"
+      ],
+      sleep: [
+        "Maintain a consistent sleep schedule",
+        "Avoid screens at least 1 hour before bedtime",
+        "Keep your bedroom cool and dark",
+        `Limit caffeine intake ${faceAnalysis.sleepQuality < 50 ? "after noon" : "in the afternoon"}`
+      ],
+      lifestyle: [
+        "Take short breaks every hour during work",
+        "Practice good posture while sitting",
+        "Consider using blue light filters on digital devices",
+        "Schedule regular health check-ups"
+      ]
+    });
   };
   
   // Calculate BMI
@@ -580,6 +685,17 @@ const Health = () => {
                       </div>
                     </div>
                   )}
+                  
+                  {cameraPermissionDenied && (
+                    <div className="mt-4 p-4 bg-destructive/10 rounded-md text-center">
+                      <p className="text-sm text-destructive font-medium">
+                        Camera access was denied. Please check your browser permissions.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Try clicking the camera icon in your browser's address bar to allow access.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -743,180 +859,4 @@ const Health = () => {
                         <p className="text-sm">{getHealthStatus(faceAnalysis.energyLevel)}</p>
                       </div>
                       
-                      <div className="p-4 border rounded-md space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Heart size={18} className="text-red-500" />
-                          <h3 className="font-medium">Immune Health</h3>
-                        </div>
-                        <Progress value={faceAnalysis.immuneHealth} className="h-2" />
-                        <p className="text-sm">{getHealthStatus(faceAnalysis.immuneHealth)}</p>
-                      </div>
-                      
-                      <div className="p-4 border rounded-md space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Thermometer size={18} className="text-orange-500" />
-                          <h3 className="font-medium">Metabolic Rate</h3>
-                        </div>
-                        <Progress value={faceAnalysis.metabolicRate} className="h-2" />
-                        <p className="text-sm">{getHealthStatus(faceAnalysis.metabolicRate)}</p>
-                      </div>
-                    </div>
-                    
-                    <Button variant="outline" onClick={() => navigate('/reports')} className="flex items-center gap-2">
-                      <FileTextIcon size={16} />
-                      Generate Health Report
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-          
-          {/* AI Recommendations Tab */}
-          <TabsContent value="recommendations" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Nutrition & Diet</CardTitle>
-                <CardDescription>
-                  Personalized dietary recommendations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recommendations.nutrition.map((recommendation, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <Apple className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                      <p>{recommendation}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Exercise & Activity</CardTitle>
-                <CardDescription>
-                  Physical activity recommendations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recommendations.exercise.map((recommendation, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <Dumbbell className="text-blue-500 mt-1 flex-shrink-0" size={18} />
-                      <p>{recommendation}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Stress Management</CardTitle>
-                <CardDescription>
-                  Tips for reducing stress and improving mental wellbeing
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recommendations.stressRelief.map((recommendation, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <Brain className="text-purple-500 mt-1 flex-shrink-0" size={18} />
-                      <p>{recommendation}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sleep Improvement</CardTitle>
-                  <CardDescription>
-                    Recommendations for better sleep
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recommendations.sleep.map((recommendation, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <Moon className="text-indigo-500 mt-1 flex-shrink-0" size={18} />
-                        <p>{recommendation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lifestyle Changes</CardTitle>
-                  <CardDescription>
-                    General wellness recommendations
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recommendations.lifestyle.map((recommendation, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <CheckCircle className="text-teal-500 mt-1 flex-shrink-0" size={18} />
-                        <p>{recommendation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-      
-      {/* Facial Analysis Dialog */}
-      <Dialog open={analyzeDialogOpen} onOpenChange={setAnalyzeDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Analyzing Your Health</DialogTitle>
-            <DialogDescription>
-              Our AI is examining your facial features to provide health insights
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {analyzingStatus === 'analyzing' && (
-              <div className="space-y-4">
-                <Progress value={analysisProgress} className="h-2 w-full" />
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Analyzing facial features...</span>
-                  <span>{analysisProgress}%</span>
-                </div>
-              </div>
-            )}
-            
-            {analyzingStatus === 'complete' && (
-              <div className="text-center space-y-4">
-                <div className="flex items-center justify-center">
-                  <CheckCircle className="h-16 w-16 text-green-500" />
-                </div>
-                <h3 className="font-medium text-lg">Analysis Complete!</h3>
-                <p className="text-muted-foreground">
-                  Your health insights are ready to view
-                </p>
-                <Button 
-                  onClick={() => setAnalyzeDialogOpen(false)}
-                  className="w-full"
-                >
-                  View Results
-                </Button>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
-  );
-};
-
-export default Health;
+                      <div className

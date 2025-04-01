@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8nWebhook } from "./automationHelpers";
 import { jsPDF } from "jspdf";
@@ -55,10 +56,16 @@ export const generateReport = async (
       })
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenAI API error:", errorData);
+      throw new Error(errorData.error?.message || `OpenAI API error: ${response.status}`);
+    }
+    
     const result = await response.json();
     
-    if (!response.ok || !result.choices || result.choices.length === 0) {
-      throw new Error(result.error?.message || "Failed to generate report");
+    if (!result.choices || result.choices.length === 0) {
+      throw new Error("No response generated from OpenAI API");
     }
     
     const reportText = result.choices[0].message.content;
