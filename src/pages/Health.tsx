@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,12 +28,23 @@ import {
   Coffee,
   Dumbbell,
   Apple,
-  CheckCircle
+  CheckCircle,
+  Smile,
+  Frown,
+  Eye,
+  Sun,
+  Wind,
+  Thermometer,
+  Clock,
+  AlertCircle,
+  CloudSun
 } from "lucide-react";
 
 const Health = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // State for health inputs
   const [ageYears, setAgeYears] = useState("");
@@ -47,9 +58,11 @@ const Health = () => {
   
   // State for facial analysis
   const [selfieUploaded, setSelfieUploaded] = useState(false);
+  const [selfieImage, setSelfieImage] = useState<string | null>(null);
   const [analyzeDialogOpen, setAnalyzeDialogOpen] = useState(false);
   const [analyzingStatus, setAnalyzingStatus] = useState<'idle' | 'analyzing' | 'complete' | 'failed'>('idle');
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [cameraActive, setCameraActive] = useState(false);
   
   // Face analysis results (mock data)
   const [faceAnalysis, setFaceAnalysis] = useState({
@@ -64,6 +77,16 @@ const Health = () => {
     hydration: 68, // percentage
     muscleTone: 55, // percentage
     sleepQuality: 60, // percentage
+    happiness: 65, // percentage
+    sadness: 25, // percentage
+    anxiety: 40, // percentage
+    concentration: 70, // percentage
+    energyLevel: 65, // percentage
+    immuneHealth: 72, // percentage
+    circulation: 80, // percentage
+    nutrientDeficiency: 30, // percentage
+    metabolicRate: 75, // percentage
+    vitality: 68, // percentage
   });
   
   // AI recommendations
@@ -100,6 +123,73 @@ const Health = () => {
     ]
   });
   
+  // Start camera for taking photo
+  const startCamera = () => {
+    setCameraActive(true);
+    const video = videoRef.current;
+    
+    if (video) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+          video.play();
+        })
+        .catch(err => {
+          console.error("Error accessing camera:", err);
+          toast({
+            title: "Camera Access Error",
+            description: "Could not access your camera. Please check permissions.",
+            variant: "destructive",
+          });
+          setCameraActive(false);
+        });
+    }
+  };
+  
+  // Stop camera
+  const stopCamera = () => {
+    const video = videoRef.current;
+    
+    if (video && video.srcObject) {
+      const tracks = (video.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+      video.srcObject = null;
+    }
+    
+    setCameraActive(false);
+  };
+  
+  // Take photo from camera
+  const takePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    if (video && canvas) {
+      const context = canvas.getContext('2d');
+      if (context) {
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw video frame to canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to image data URL
+        const imageDataUrl = canvas.toDataURL('image/jpeg');
+        setSelfieImage(imageDataUrl);
+        setSelfieUploaded(true);
+        
+        // Stop camera after taking photo
+        stopCamera();
+        
+        toast({
+          title: "Photo Captured",
+          description: "Your selfie has been captured and is ready for analysis.",
+        });
+      }
+    }
+  };
+  
   // Handle face analysis
   const handleFaceAnalysis = () => {
     setAnalyzingStatus('analyzing');
@@ -112,21 +202,47 @@ const Health = () => {
         if (prev >= 100) {
           clearInterval(interval);
           setAnalyzingStatus('complete');
+          
+          // Generate slightly randomized facial analysis results
+          setFaceAnalysis(prev => ({
+            ...prev,
+            stress: Math.floor(30 + Math.random() * 30),
+            fatigue: Math.floor(35 + Math.random() * 35),
+            happiness: Math.floor(50 + Math.random() * 40),
+            sadness: Math.floor(10 + Math.random() * 40),
+            anxiety: Math.floor(20 + Math.random() * 40),
+            sleepQuality: Math.floor(40 + Math.random() * 45),
+            mood: ['Happy', 'Neutral', 'Focused', 'Tired', 'Calm'][Math.floor(Math.random() * 5)],
+            biologicalAge: Math.floor(25 + Math.random() * 8),
+          }));
+          
           return 100;
         }
-        return prev + 10;
+        return prev + 5;
       });
-    }, 500);
+    }, 300);
   };
   
   // Handle file upload
-  const handleFileUpload = () => {
-    // This would normally handle the file upload process
-    setSelfieUploaded(true);
-    toast({
-      title: "Image Uploaded",
-      description: "Your selfie has been uploaded and is ready for analysis.",
-    });
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    
+    if (file) {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        const imageDataUrl = e.target?.result as string;
+        setSelfieImage(imageDataUrl);
+        setSelfieUploaded(true);
+        
+        toast({
+          title: "Image Uploaded",
+          description: "Your selfie has been uploaded and is ready for analysis.",
+        });
+      };
+      
+      reader.readAsDataURL(file);
+    }
   };
   
   // Generate AI recommendations based on health data and face analysis
@@ -356,46 +472,100 @@ const Health = () => {
               <CardHeader>
                 <CardTitle>Facial Health Analysis</CardTitle>
                 <CardDescription>
-                  Upload a selfie for AI-powered health analysis
+                  Upload a selfie or take a photo for AI-powered health analysis
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   {!selfieUploaded ? (
-                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-primary/20 rounded-lg p-12">
-                      <div className="flex flex-col items-center space-y-4">
-                        <Camera size={48} className="text-primary/40" />
-                        <div className="text-center">
-                          <h3 className="font-medium">Upload a Selfie</h3>
-                          <p className="text-sm text-muted-foreground max-w-xs">
-                            Take a clear photo of your face in good lighting for the most accurate analysis
-                          </p>
+                    <div>
+                      {!cameraActive ? (
+                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-primary/20 rounded-lg p-12">
+                          <div className="flex flex-col items-center space-y-4">
+                            <Camera size={48} className="text-primary/40" />
+                            <div className="text-center">
+                              <h3 className="font-medium">Upload a Selfie or Take a Photo</h3>
+                              <p className="text-sm text-muted-foreground max-w-xs">
+                                Take a clear photo of your face in good lighting for the most accurate analysis
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <label className="cursor-pointer">
+                                <Input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  className="hidden" 
+                                  onChange={handleFileUpload}
+                                />
+                                <Button type="button" className="flex items-center gap-2">
+                                  <Upload size={16} />
+                                  Upload Photo
+                                </Button>
+                              </label>
+                              <Button 
+                                variant="outline" 
+                                className="flex items-center gap-2"
+                                onClick={startCamera}
+                              >
+                                <Camera size={16} />
+                                Take Photo
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button onClick={handleFileUpload} className="flex items-center gap-2">
-                            <Upload size={16} />
-                            Upload Photo
-                          </Button>
-                          <Button variant="outline" className="flex items-center gap-2">
-                            <Camera size={16} />
-                            Take Photo
-                          </Button>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="relative mx-auto overflow-hidden rounded-lg border border-border max-w-md">
+                            <video 
+                              ref={videoRef} 
+                              className="w-full h-[300px] object-cover" 
+                              autoPlay 
+                              playsInline 
+                              muted
+                            />
+                          </div>
+                          <canvas ref={canvasRef} className="hidden" />
+                          <div className="flex justify-center space-x-2">
+                            <Button onClick={takePhoto} className="flex items-center gap-2">
+                              <Camera size={16} />
+                              Capture
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              onClick={stopCamera} 
+                              className="flex items-center gap-2"
+                            >
+                              <XIcon size={16} />
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="flex items-center justify-center">
                         <div className="relative w-48 h-48 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                          {/* This would be a real image in a production app */}
-                          <img
-                            src="/placeholder.svg"
-                            alt="Selfie placeholder"
-                            className="w-full h-full object-cover"
-                          />
+                          {/* Display the captured or uploaded image */}
+                          {selfieImage ? (
+                            <img
+                              src={selfieImage}
+                              alt="Selfie"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <img
+                              src="/placeholder.svg"
+                              alt="Selfie placeholder"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                           <button 
                             className="absolute top-2 right-2 bg-background/80 p-1 rounded-full"
-                            onClick={() => setSelfieUploaded(false)}
+                            onClick={() => {
+                              setSelfieUploaded(false);
+                              setSelfieImage(null);
+                            }}
                           >
                             <XIcon size={16} />
                           </button>
@@ -419,11 +589,12 @@ const Health = () => {
                 <CardHeader>
                   <CardTitle>Analysis Results</CardTitle>
                   <CardDescription>
-                    Health insights based on facial analysis
+                    Comprehensive health insights based on facial analysis
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
+                    <h3 className="text-lg font-medium mb-2">Emotional Indicators</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="p-4 bg-primary/10 rounded-md space-y-2">
                         <div className="flex items-center gap-2">
@@ -440,6 +611,35 @@ const Health = () => {
                         </div>
                       </div>
                       
+                      <div className="p-4 bg-primary/10 rounded-md space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Smile size={18} />
+                          <h3 className="font-medium">Happiness</h3>
+                        </div>
+                        <Progress value={faceAnalysis.happiness} className="h-2" />
+                        <div className="flex justify-between text-sm">
+                          <span>Low</span>
+                          <span>{faceAnalysis.happiness}%</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-primary/10 rounded-md space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Frown size={18} />
+                          <h3 className="font-medium">Sadness</h3>
+                        </div>
+                        <Progress value={faceAnalysis.sadness} className="h-2" />
+                        <div className="flex justify-between text-sm">
+                          <span>Low</span>
+                          <span>{faceAnalysis.sadness}%</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-lg font-medium mb-2 mt-6">Physical Wellbeing</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="p-4 bg-primary/10 rounded-md space-y-2">
                         <div className="flex items-center gap-2">
                           <Coffee size={18} />
@@ -467,8 +667,22 @@ const Health = () => {
                           <span>Excellent</span>
                         </div>
                       </div>
+                      
+                      <div className="p-4 bg-primary/10 rounded-md space-y-2">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle size={18} />
+                          <h3 className="font-medium">Anxiety</h3>
+                        </div>
+                        <Progress value={faceAnalysis.anxiety} className="h-2" />
+                        <div className="flex justify-between text-sm">
+                          <span>Low</span>
+                          <span>{faceAnalysis.anxiety}%</span>
+                          <span>High</span>
+                        </div>
+                      </div>
                     </div>
                     
+                    <h3 className="text-lg font-medium mb-2 mt-6">Health Metrics</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="p-4 border rounded-md">
                         <h3 className="text-sm font-medium">Biological Age</h3>
@@ -491,17 +705,60 @@ const Health = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 className="text-lg font-medium mb-2 mt-6">Additional Health Indicators</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="p-4 border rounded-md space-y-2">
-                        <h3 className="font-medium">Skin Health</h3>
+                        <div className="flex items-center gap-2">
+                          <Sun size={18} className="text-amber-500" />
+                          <h3 className="font-medium">Skin Health</h3>
+                        </div>
                         <Progress value={faceAnalysis.skinHealth} className="h-2" />
                         <p className="text-sm">{getHealthStatus(faceAnalysis.skinHealth)}</p>
                       </div>
                       
                       <div className="p-4 border rounded-md space-y-2">
-                        <h3 className="font-medium">Eye Health</h3>
+                        <div className="flex items-center gap-2">
+                          <Eye size={18} className="text-blue-500" />
+                          <h3 className="font-medium">Eye Health</h3>
+                        </div>
                         <Progress value={faceAnalysis.eyeHealth} className="h-2" />
                         <p className="text-sm">{getHealthStatus(faceAnalysis.eyeHealth)}</p>
+                      </div>
+                      
+                      <div className="p-4 border rounded-md space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Brain size={18} className="text-purple-500" />
+                          <h3 className="font-medium">Concentration</h3>
+                        </div>
+                        <Progress value={faceAnalysis.concentration} className="h-2" />
+                        <p className="text-sm">{getHealthStatus(faceAnalysis.concentration)}</p>
+                      </div>
+                      
+                      <div className="p-4 border rounded-md space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Wind size={18} className="text-green-500" />
+                          <h3 className="font-medium">Energy Level</h3>
+                        </div>
+                        <Progress value={faceAnalysis.energyLevel} className="h-2" />
+                        <p className="text-sm">{getHealthStatus(faceAnalysis.energyLevel)}</p>
+                      </div>
+                      
+                      <div className="p-4 border rounded-md space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Heart size={18} className="text-red-500" />
+                          <h3 className="font-medium">Immune Health</h3>
+                        </div>
+                        <Progress value={faceAnalysis.immuneHealth} className="h-2" />
+                        <p className="text-sm">{getHealthStatus(faceAnalysis.immuneHealth)}</p>
+                      </div>
+                      
+                      <div className="p-4 border rounded-md space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Thermometer size={18} className="text-orange-500" />
+                          <h3 className="font-medium">Metabolic Rate</h3>
+                        </div>
+                        <Progress value={faceAnalysis.metabolicRate} className="h-2" />
+                        <p className="text-sm">{getHealthStatus(faceAnalysis.metabolicRate)}</p>
                       </div>
                     </div>
                     

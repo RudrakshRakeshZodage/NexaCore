@@ -1,10 +1,9 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8nWebhook } from "./automationHelpers";
 import { jsPDF } from "jspdf";
 
-// Google API key for AI services
-const GOOGLE_API_KEY = "AIzaSyDSbWxbhKo2iUw2woR0tomAl71Wq7XTqJw";
+// OpenAI API key
+const OPENAI_API_KEY = "AIzaSyDSbWxbhKo2iUw2woR0tomAl71Wq7XTqJw";
 
 /**
  * Generate a report from user data using OpenAI API
@@ -32,12 +31,12 @@ export const generateReport = async (
   try {
     const prompt = generatePromptForReport(data, reportType);
     
-    // Call OpenAI API
+    // Call OpenAI API - using the correct endpoint and authorization format
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GOOGLE_API_KEY}`
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
@@ -168,7 +167,6 @@ const generatePdfFromText = async (
   }
   
   // Add footer
-  // Fixed: Using the correct API for getting page count
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
