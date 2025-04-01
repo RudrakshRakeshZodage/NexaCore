@@ -1,18 +1,24 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8nWebhook } from "./automationHelpers";
+import { jsPDF } from "jspdf";
 
 // Google API key for AI services
 const GOOGLE_API_KEY = "AIzaSyDSbWxbhKo2iUw2woR0tomAl71Wq7XTqJw";
 
 /**
- * Generate a report from user data using Google AI services
+ * Generate a report from user data using OpenAI API
  */
 export const generateReport = async (
   data: {
     education?: any;
     health?: any;
     finance?: any;
+    user?: {
+      name?: string;
+      email?: string;
+      profilePic?: string;
+    };
     [key: string]: any;
   },
   reportType: "education" | "health" | "finance" | "comprehensive"
@@ -20,49 +26,55 @@ export const generateReport = async (
   success: boolean;
   reportText?: string;
   reportUrl?: string;
+  pdfBlob?: Blob;
   message: string;
 }> => {
   try {
     const prompt = generatePromptForReport(data, reportType);
     
-    // Call Google AI API
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_API_KEY}`, {
-      method: 'POST',
+    // Call OpenAI API
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GOOGLE_API_KEY}`
       },
       body: JSON.stringify({
-        contents: [
+        model: "gpt-3.5-turbo",
+        messages: [
           {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
+            role: "system",
+            content: "You are an AI assistant specializing in creating detailed personalized reports based on user data. Format your response with clear sections, bullet points, and actionable recommendations."
+          },
+          {
+            role: "user",
+            content: prompt
           }
         ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
-        }
+        temperature: 0.7,
+        max_tokens: 2048
       })
     });
 
     const result = await response.json();
     
-    if (!response.ok || !result.candidates || result.candidates.length === 0) {
+    if (!response.ok || !result.choices || result.choices.length === 0) {
       throw new Error(result.error?.message || "Failed to generate report");
     }
     
-    const reportText = result.candidates[0].content.parts[0].text;
+    const reportText = result.choices[0].message.content;
     
-    // Generate PDF URL (mock for now)
-    const reportUrl = await generatePdfFromText(reportText, reportType);
+    // Generate PDF
+    const pdfBlob = await generatePdfFromText(reportText, reportType, data.user?.name || "User");
+    
+    // Create object URL for download
+    const reportUrl = URL.createObjectURL(pdfBlob);
     
     return {
       success: true,
       reportText,
       reportUrl,
+      pdfBlob,
       message: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} report generated successfully`
     };
   } catch (error) {
@@ -79,29 +91,91 @@ export const generateReport = async (
  */
 const generatePdfFromText = async (
   text: string, 
-  reportType: string
-): Promise<string> => {
-  // For now, we'll mock this by returning a dynamic URL
-  // In a real implementation, you would use a PDF generation service
-  // or trigger an n8n workflow to handle PDF creation
+  reportType: string,
+  userName: string = "NexaCore User"
+): Promise<Blob> => {
+  const doc = new jsPDF();
   
-  // Trigger n8n webhook to generate PDF if configured
-  try {
-    // This can be enhanced later to use actual n8n webhooks from settings
-    await triggerN8nWebhook(
-      "https://your-n8n-instance/webhook/pdf-generator", 
-      {
-        reportType,
-        reportText: text,
-        timestamp: new Date().toISOString()
-      }
-    );
-  } catch (error) {
-    console.error("Error triggering n8n webhook for PDF generation:", error);
+  // Add logo (mock logo for now)
+  doc.setFillColor(20, 30, 60);
+  doc.rect(0, 0, 210, 20, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.text("NexaCore", 105, 12, { align: "center" });
+  
+  // Add report title
+  doc.setFontSize(20);
+  doc.setTextColor(20, 30, 60);
+  doc.text(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`, 105, 30, { align: "center" });
+  
+  // Add user name
+  doc.setFontSize(12);
+  doc.text(`Prepared for: ${userName}`, 105, 40, { align: "center" });
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 45, { align: "center" });
+  
+  // Add divider
+  doc.setDrawColor(20, 30, 60);
+  doc.line(20, 50, 190, 50);
+  
+  // Add report content
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  
+  // Format the text with sections and add to PDF
+  const lines = text.split('\n');
+  let y = 60;
+  let pageHeight = doc.internal.pageSize.height;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Skip empty lines
+    if (!line) continue;
+    
+    // Check if we need a new page
+    if (y > pageHeight - 20) {
+      doc.addPage();
+      y = 20;
+    }
+    
+    // Format headings
+    if (line.startsWith('# ')) {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(line.replace('# ', ''), 20, y);
+      y += 8;
+    } else if (line.startsWith('## ')) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(line.replace('## ', ''), 20, y);
+      y += 6;
+    } else if (line.startsWith('- ')) {
+      // Format bullet points
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const formattedLine = doc.splitTextToSize(line, 160);
+      doc.text('•', 20, y);
+      doc.text(formattedLine, 25, y);
+      y += 5 * formattedLine.length;
+    } else {
+      // Regular text
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const formattedLine = doc.splitTextToSize(line, 170);
+      doc.text(formattedLine, 20, y);
+      y += 5 * formattedLine.length;
+    }
   }
   
-  // Return a mock URL for now
-  return `https://nexacore.app/reports/${reportType}_${Date.now()}.pdf`;
+  // Add footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.text(`NexaCore Report - Page ${i} of ${pageCount}`, 105, 290, { align: "center" });
+  }
+  
+  return doc.output('blob');
 };
 
 /**
@@ -191,6 +265,8 @@ export const useReportGenerator = () => {
       showToast?: boolean;
       onSuccess?: (report: { reportText: string; reportUrl: string }) => void;
       onError?: (error: string) => void;
+      downloadPdf?: boolean;
+      userName?: string;
     }
   ) => {
     if (options?.showToast !== false) {
@@ -200,7 +276,12 @@ export const useReportGenerator = () => {
       });
     }
     
-    const result = await generateReport(data, reportType);
+    const result = await generateReport({
+      ...data,
+      user: {
+        name: options?.userName || "NexaCore User"
+      }
+    }, reportType);
     
     if (result.success && result.reportText && result.reportUrl) {
       if (options?.showToast !== false) {
@@ -209,6 +290,16 @@ export const useReportGenerator = () => {
           description: result.message,
           variant: "default",
         });
+      }
+      
+      // Download PDF if requested
+      if (options?.downloadPdf && result.reportUrl) {
+        const link = document.createElement('a');
+        link.href = result.reportUrl;
+        link.download = `nexacore_${reportType}_report_${Date.now()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
       
       if (options?.onSuccess) {

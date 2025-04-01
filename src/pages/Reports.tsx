@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -140,7 +139,7 @@ The correlation between your stress levels and irregular sleep pattern may be af
 
 const Reports = () => {
   const { toast } = useToast();
-  const { generateUserReport } = useReportGenerator();
+  const { generateReport } = useReportGenerator();
   const [activeTab, setActiveTab] = useState("saved");
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentReportType, setCurrentReportType] = useState<string | null>(null);
@@ -214,64 +213,55 @@ const Reports = () => {
         income: 25000,
         expenses: 18000,
         goals: "Saving for education, travel"
+      },
+      user: {
+        name: "NexaCore User",
+        email: "user@example.com"
       }
     };
     
     try {
-      // Simulate report generation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Generate a report using the enhanced report generator
+      const result = await generateReport(mockData, reportType as any);
       
-      let reportText = "";
-      let reportTitle = "";
-      
-      switch(reportType) {
-        case "education":
-          reportText = educationReportPreview;
-          reportTitle = "Education Progress Report";
-          break;
-        case "health":
-          reportText = healthReportPreview;
-          reportTitle = "Health Analysis Report";
-          break;
-        case "finance":
-          reportText = financeReportPreview;
-          reportTitle = "Financial Status Report";
-          break;
-        case "comprehensive":
-          reportText = comprehensiveReportPreview;
-          reportTitle = "Comprehensive Life Report";
-          break;
+      if (result.success && result.reportText && result.reportUrl) {
+        // Add to saved reports
+        const newReport = {
+          id: savedReports.length + 1,
+          type: reportType,
+          title: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
+          date: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
+          text: result.reportText,
+          url: result.reportUrl
+        };
+        
+        setSavedReports([newReport, ...savedReports]);
+        
+        // Show the report viewer
+        setCurrentReport({
+          type: reportType,
+          text: result.reportText,
+          url: result.reportUrl,
+          timestamp: new Date().toLocaleString()
+        });
+        setShowReportViewer(true);
+        
+        toast({
+          title: "Report Generated",
+          description: `Your ${reportType} report has been generated and downloaded`,
+          variant: "default",
+        });
+        
+        // Download the PDF automatically
+        const link = document.createElement('a');
+        link.href = result.reportUrl;
+        link.download = `nexacore_${reportType}_report_${Date.now()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        throw new Error("Failed to generate report");
       }
-      
-      // Generate a random URL for the PDF
-      const reportUrl = `https://nexacore.app/reports/${reportType}_${Date.now()}.pdf`;
-      
-      // Add to saved reports
-      const newReport = {
-        id: savedReports.length + 1,
-        type: reportType,
-        title: reportTitle,
-        date: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
-        text: reportText,
-        url: reportUrl
-      };
-      
-      setSavedReports([newReport, ...savedReports]);
-      
-      // Show the report viewer
-      setCurrentReport({
-        type: reportType,
-        text: reportText,
-        url: reportUrl,
-        timestamp: new Date().toLocaleString()
-      });
-      setShowReportViewer(true);
-      
-      toast({
-        title: "Report Generated",
-        description: `Your ${reportType} report has been generated successfully`,
-        variant: "default",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -988,6 +978,7 @@ const Reports = () => {
               timestamp={currentReport.timestamp}
               onClose={() => setShowReportViewer(false)}
               className="max-h-[90vh]"
+              autoDownload={true}
             />
           </div>
         </div>

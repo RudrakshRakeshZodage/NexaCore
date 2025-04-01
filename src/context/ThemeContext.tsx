@@ -15,7 +15,7 @@ interface ThemeContextType {
 }
 
 const initialState: ThemeContextType = {
-  theme: "system",
+  theme: "dark",
   setTheme: () => null,
 };
 
@@ -23,7 +23,7 @@ const ThemeContext = createContext<ThemeContextType>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "dark",
   storageKey = "nexacore-theme",
   ...props
 }: ThemeProviderProps) {
@@ -36,16 +36,9 @@ export function ThemeProvider({
     
     root.classList.remove("light", "dark");
     
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      
-      root.classList.add(systemTheme);
-      return;
-    }
+    // Always apply dark mode regardless of system preferences
+    root.classList.add("dark");
     
-    root.classList.add(theme);
   }, [theme]);
 
   const value = {

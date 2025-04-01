@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ interface ReportViewerProps {
   timestamp?: string;
   onClose?: () => void;
   className?: string;
+  autoDownload?: boolean;
 }
 
 const ReportViewer: React.FC<ReportViewerProps> = ({
@@ -19,16 +20,30 @@ const ReportViewer: React.FC<ReportViewerProps> = ({
   reportType,
   timestamp = new Date().toLocaleString(),
   onClose,
-  className = ''
+  className = '',
+  autoDownload = false
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  
+  useEffect(() => {
+    if (autoDownload && reportUrl) {
+      handleDownload();
+    }
+  }, [autoDownload, reportUrl]);
   
   const handleDownload = () => {
     setIsDownloading(true);
     
-    // Simulate download delay
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = reportUrl;
+    link.download = `nexacore_${reportType}_report_${Date.now()}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Simulate download delay for UI feedback
     setTimeout(() => {
-      window.open(reportUrl, '_blank');
       setIsDownloading(false);
     }, 1000);
   };
