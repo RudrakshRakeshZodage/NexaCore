@@ -2,424 +2,669 @@
 import { jsPDF } from 'jspdf';
 import { saveAs } from 'file-saver';
 
-// Logo for the PDF (base64 encoded image)
-const NEXACORE_LOGO = 'data:image/png;base64,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';
+type ReportType = 'education' | 'health' | 'finance' | 'comprehensive';
 
-interface ReportOptions {
-  userName: string;
-  userEmail?: string;
+interface GeneratePDFOptions {
   includeTimestamp?: boolean;
+  includeHeader?: boolean;
   includeLogo?: boolean;
-  includePageNumbers?: boolean;
-  logoUrl?: string;
+  includeFooter?: boolean;
 }
 
-interface ReportSection {
-  title: string;
-  content: string | {
-    type: 'paragraph' | 'bullet' | 'heading2' | 'table';
-    value: string | string[] | any;
-  }[];
-}
-
-export class PDFReportGenerator {
-  private doc: jsPDF;
-  private options: ReportOptions;
-  private currentY: number = 0;
-  private pageWidth: number = 210;
-  private leftMargin: number = 20;
-  private rightMargin: number = 20;
-  private topMargin: number = 20;
-  private bottomMargin: number = 20;
-  private pageHeight: number = 297;
-  private contentWidth: number = 0;
-
-  constructor(options: ReportOptions) {
-    this.options = {
-      includeTimestamp: true,
-      includeLogo: true,
-      includePageNumbers: true,
-      ...options
-    };
-    
-    this.doc = new jsPDF();
-    this.contentWidth = this.pageWidth - this.leftMargin - this.rightMargin;
-    this.currentY = this.topMargin;
-  }
-
-  private checkPageBreak(heightNeeded: number): void {
-    if (this.currentY + heightNeeded > this.pageHeight - this.bottomMargin) {
-      this.doc.addPage();
-      this.currentY = this.topMargin;
-      this.addPageNumber();
-    }
-  }
-
-  private addPageNumber(): void {
-    if (this.options.includePageNumbers) {
-      const pageCount = this.doc.getNumberOfPages();
-      this.doc.setFontSize(8);
-      this.doc.setTextColor(100, 100, 100);
-      this.doc.text(`Page ${pageCount}`, this.pageWidth / 2, this.pageHeight - 10, { align: 'center' });
-    }
-  }
-
-  addHeader(): void {
-    // Add logo
-    if (this.options.includeLogo) {
-      try {
-        const logoUrl = this.options.logoUrl || NEXACORE_LOGO;
-        this.doc.addImage(logoUrl, 'PNG', this.leftMargin, this.currentY, 15, 15);
-      } catch (e) {
-        console.error('Error adding logo:', e);
-      }
-    }
-
-    // Add report title
-    this.doc.setFontSize(22);
-    this.doc.setTextColor(20, 30, 60);
-    this.doc.text('NexaCore Report', this.pageWidth / 2, this.currentY + 10, { align: 'center' });
-    
-    // Add user name
-    this.doc.setFontSize(12);
-    this.doc.setTextColor(60, 60, 60);
-    this.doc.text(`Prepared for: ${this.options.userName}`, this.pageWidth / 2, this.currentY + 18, { align: 'center' });
-    
-    // Add timestamp
-    if (this.options.includeTimestamp) {
-      const timestamp = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
-      this.doc.setFontSize(10);
-      this.doc.text(`Generated on: ${timestamp}`, this.pageWidth / 2, this.currentY + 25, { align: 'center' });
-    }
-    
-    // Add divider
-    this.currentY += 30;
-    this.doc.setDrawColor(20, 30, 60);
-    this.doc.line(this.leftMargin, this.currentY, this.pageWidth - this.rightMargin, this.currentY);
-    this.currentY += 10;
-  }
-
-  addSection(section: ReportSection): void {
-    this.checkPageBreak(10);
-    
-    // Add section title
-    this.doc.setFontSize(16);
-    this.doc.setTextColor(20, 90, 100);
-    this.doc.text(section.title, this.leftMargin, this.currentY);
-    this.currentY += 8;
-    
-    // Add section content
-    if (typeof section.content === 'string') {
-      this.addText(section.content);
-    } else if (Array.isArray(section.content)) {
-      section.content.forEach(item => {
-        if (typeof item === 'string') {
-          this.addText(item);
-        } else {
-          switch (item.type) {
-            case 'paragraph':
-              this.addText(item.value as string);
-              break;
-            case 'bullet':
-              this.addBulletPoint(item.value as string);
-              break;
-            case 'heading2':
-              this.addSubheading(item.value as string);
-              break;
-            case 'table':
-              // Table handling would require more complex logic
-              break;
-          }
-        }
-      });
-    }
-    
-    this.currentY += 5;
-  }
-
-  addText(text: string): void {
-    this.checkPageBreak(10);
-    this.doc.setFontSize(11);
-    this.doc.setTextColor(60, 60, 60);
-    
-    const textLines = this.doc.splitTextToSize(text, this.contentWidth);
-    this.doc.text(textLines, this.leftMargin, this.currentY);
-    this.currentY += textLines.length * 6;
-  }
-
-  addBulletPoint(text: string): void {
-    this.checkPageBreak(6);
-    this.doc.setFontSize(11);
-    this.doc.setTextColor(60, 60, 60);
-    
-    const bullet = '•';
-    const textLines = this.doc.splitTextToSize(text, this.contentWidth - 8);
-    this.doc.text(bullet, this.leftMargin, this.currentY);
-    this.doc.text(textLines, this.leftMargin + 5, this.currentY);
-    this.currentY += textLines.length * 6;
-  }
-
-  addSubheading(text: string): void {
-    this.checkPageBreak(8);
-    this.doc.setFontSize(14);
-    this.doc.setTextColor(40, 40, 40);
-    this.doc.text(text, this.leftMargin, this.currentY);
-    this.currentY += 8;
-  }
-
-  addImage(imageUrl: string, width: number, height: number): void {
-    this.checkPageBreak(height + 5);
-    try {
-      this.doc.addImage(
-        imageUrl, 
-        'JPEG', 
-        this.leftMargin, 
-        this.currentY, 
-        width, 
-        height
-      );
-      this.currentY += height + 5;
-    } catch (e) {
-      console.error('Error adding image:', e);
-      this.addText('[Error: Could not add image]');
-    }
-  }
-
-  addFooter(): void {
-    this.doc.setFontSize(9);
-    this.doc.setTextColor(100, 100, 100);
-    
-    const footerText = 'NexaCore - Your AI-Powered Life Management Platform';
-    const pageCount = this.doc.getNumberOfPages();
-    
-    for (let i = 1; i <= pageCount; i++) {
-      this.doc.setPage(i);
-      this.doc.text(footerText, this.pageWidth / 2, this.pageHeight - 15, { align: 'center' });
-    }
-  }
-
-  addFaceAnalysisSection(faceAnalysis: any): void {
-    if (!faceAnalysis) return;
-    
-    this.checkPageBreak(10);
-    
-    // Add section title
-    this.addSubheading('Facial Analysis Results');
-    
-    // Add base information
-    this.addBulletPoint(`Age estimate: ${faceAnalysis.age} years`);
-    this.addBulletPoint(`Gender estimate: ${faceAnalysis.gender} (${(Number(faceAnalysis.genderProbability || 0) * 100).toFixed(0)}% confidence)`);
-    this.addBulletPoint(`Dominant emotion: ${faceAnalysis.dominantExpression}`);
-    
-    // Add emotional analysis
-    this.addSubheading('Emotional Analysis');
-    this.addText('Your facial expression analysis shows the following emotional states:');
-    
-    if (faceAnalysis.expressions) {
-      Object.entries(faceAnalysis.expressions).forEach(([emotion, value]: [string, any]) => {
-        this.addBulletPoint(`${emotion.charAt(0).toUpperCase() + emotion.slice(1)}: ${(value * 100).toFixed(0)}%`);
-      });
-    }
-    
-    // Add facial features if available
-    if (faceAnalysis.facialFeatures) {
-      this.addSubheading('Facial Features');
-      Object.entries(faceAnalysis.facialFeatures).forEach(([feature, value]: [string, any]) => {
-        const formattedFeature = feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        this.addBulletPoint(`${formattedFeature}: ${value}`);
-      });
-    }
-    
-    // Add facial proportions if available
-    if (faceAnalysis.facialProportions) {
-      this.addSubheading('Facial Proportions');
-      Object.entries(faceAnalysis.facialProportions).forEach(([proportion, value]: [string, any]) => {
-        const formattedProportion = proportion.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        this.addBulletPoint(`${formattedProportion}: ${value}`);
-      });
-    }
-    
-    // Add skin analysis if available
-    if (faceAnalysis.skinAnalysis) {
-      this.addSubheading('Skin Analysis');
-      Object.entries(faceAnalysis.skinAnalysis).forEach(([attribute, value]: [string, any]) => {
-        const formattedAttribute = attribute.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        this.addBulletPoint(`${formattedAttribute}: ${value}`);
-      });
-    }
-    
-    this.addText('\nFacial analysis can provide insights into emotional well-being and stress levels. Regular monitoring can help identify patterns and manage mental health more effectively.');
-  }
-
-  async generateReport(data: any, reportType: 'education' | 'health' | 'finance' | 'comprehensive'): Promise<Blob> {
-    // Add report header
-    this.addHeader();
-    
-    // Add report summary
-    this.addSection({
-      title: 'Executive Summary',
-      content: [
-        {
-          type: 'paragraph',
-          value: `This ${reportType} report provides a comprehensive analysis of your data, along with personalized recommendations to help you achieve your goals.`
-        }
-      ]
-    });
-    
-    // Add specific sections based on report type
-    if (reportType === 'education' || reportType === 'comprehensive') {
-      this.addSection({
-        title: 'Education Analysis',
-        content: [
-          {
-            type: 'paragraph',
-            value: 'Based on your education profile and career goals, we have analyzed your current skills and identified opportunities for growth.'
-          },
-          {
-            type: 'heading2',
-            value: 'Current Education Status'
-          },
-          {
-            type: 'bullet',
-            value: data.education?.educationLevel || 'Education level not specified'
-          },
-          {
-            type: 'bullet',
-            value: data.education?.institution ? `Institution: ${data.education.institution}` : 'Institution not specified'
-          },
-          {
-            type: 'bullet',
-            value: data.education?.fieldOfStudy ? `Field of Study: ${data.education.fieldOfStudy}` : 'Field of study not specified'
-          },
-          {
-            type: 'heading2',
-            value: 'Recommendations'
-          },
-          {
-            type: 'bullet',
-            value: 'Consider pursuing additional certifications in your field to enhance your marketability.'
-          },
-          {
-            type: 'bullet',
-            value: 'Develop technical skills that align with your career goals.'
-          },
-          {
-            type: 'bullet',
-            value: 'Engage in continuous learning through online courses and workshops.'
-          }
-        ]
-      });
-    }
-    
-    if (reportType === 'health' || reportType === 'comprehensive') {
-      this.addSection({
-        title: 'Health Analysis',
-        content: [
-          {
-            type: 'paragraph',
-            value: 'Your health data has been analyzed to provide personalized recommendations for improving your overall well-being.'
-          },
-          {
-            type: 'heading2',
-            value: 'Current Health Status'
-          }
-        ]
-      });
-      
-      // Add face analysis results if available
-      if (data.faceAnalysis) {
-        this.addFaceAnalysisSection(data.faceAnalysis);
-      } else {
-        this.addText('No facial analysis data available. Consider using our facial analysis tool to get insights into your emotional well-being.');
-      }
-      
-      this.addSubheading('Recommendations');
-      this.addBulletPoint('Maintain a balanced diet rich in fruits, vegetables, and whole grains.');
-      this.addBulletPoint('Engage in regular physical activity for at least 30 minutes per day.');
-      this.addBulletPoint('Ensure adequate sleep of 7-8 hours per night.');
-      this.addBulletPoint('Practice stress management techniques such as meditation.');
-    }
-    
-    if (reportType === 'finance' || reportType === 'comprehensive') {
-      this.addSection({
-        title: 'Financial Analysis',
-        content: [
-          {
-            type: 'paragraph',
-            value: 'Based on your financial data, we have analyzed your current financial status and identified opportunities for improvement.'
-          },
-          {
-            type: 'heading2',
-            value: 'Recent Transactions'
-          }
-        ]
-      });
-      
-      // Add payment transactions if available
-      if (data.transactions && data.transactions.length > 0) {
-        data.transactions.forEach((transaction: any) => {
-          this.addBulletPoint(`${new Date(transaction.timestamp).toLocaleDateString()}: $${transaction.amount} - ${transaction.purpose} (${transaction.method})`);
-        });
-      } else {
-        this.addText('No recent transaction data available.');
-      }
-      
-      this.addSubheading('Recommendations');
-      this.addBulletPoint('Create a budget and track your expenses regularly.');
-      this.addBulletPoint('Build an emergency fund covering 3-6 months of expenses.');
-      this.addBulletPoint('Pay off high-interest debt as quickly as possible.');
-      this.addBulletPoint('Invest in a diversified portfolio aligned with your risk tolerance.');
-    }
-    
-    // Add conclusion
-    this.addSection({
-      title: 'Conclusion',
-      content: 'This report provides a snapshot of your current status and recommendations for improvement. Remember that progress takes time and consistent effort. Regularly review your goals and adjust your strategies as needed.'
-    });
-    
-    // Add footer
-    this.addFooter();
-    
-    // Return the generated PDF as a blob
-    return this.doc.output('blob');
-  }
-
-  saveAs(filename: string): void {
-    this.doc.save(filename);
-  }
-
-  blobOutput(): Blob {
-    return this.doc.output('blob');
-  }
-}
-
+/**
+ * Generate a PDF report from data
+ */
 export const generatePDFReport = async (
   data: any,
-  reportType: 'education' | 'health' | 'finance' | 'comprehensive',
-  userName: string,
-  options: Partial<ReportOptions> = {}
-): Promise<{ url: string, blob: Blob }> => {
-  const reportGenerator = new PDFReportGenerator({
-    userName,
-    includeTimestamp: true,
-    includeLogo: true,
-    includePageNumbers: true,
-    ...options
+  reportType: ReportType,
+  userName: string = 'User',
+  options: GeneratePDFOptions = {}
+): Promise<{ blob: Blob; url: string }> => {
+  // Create a new PDF document
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
   });
   
-  const pdfBlob = await reportGenerator.generateReport(data, reportType);
+  // Set default options
+  const { 
+    includeTimestamp = true, 
+    includeHeader = true, 
+    includeLogo = true, 
+    includeFooter = true
+  } = options;
+  
+  // Default margins
+  const margin = 20;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const contentWidth = pageWidth - 2 * margin;
+  
+  // Set font styles
+  doc.setFont('helvetica', 'normal');
+  
+  // Add header
+  if (includeHeader) {
+    doc.setFillColor(30, 41, 59); // Dark blue header
+    doc.rect(0, 0, pageWidth, 30, 'F');
+    
+    // Add logo
+    if (includeLogo) {
+      // This would ideally be a real logo
+      doc.setTextColor(0, 230, 180); // Teal color
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('NexaCore', margin, 12);
+    }
+    
+    // Add report type
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(getReportTitle(reportType), pageWidth - margin - doc.getTextWidth(getReportTitle(reportType)), 12);
+    
+    // Add date if requested
+    if (includeTimestamp) {
+      const dateString = new Date().toLocaleDateString();
+      doc.setFontSize(10);
+      doc.text(dateString, pageWidth - margin - doc.getTextWidth(dateString), 20);
+    }
+  }
+  
+  // Main content
+  let yPos = includeHeader ? 40 : margin;
+  
+  // Title
+  doc.setTextColor(30, 41, 59);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${getReportTitle(reportType)} for ${userName}`, margin, yPos);
+  yPos += 10;
+  
+  // Divider
+  doc.setDrawColor(0, 230, 180);
+  doc.setLineWidth(0.5);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 10;
+  
+  // Add content based on report type
+  switch (reportType) {
+    case 'education':
+      yPos = addEducationContent(doc, data, yPos, margin, contentWidth);
+      break;
+    case 'health':
+      yPos = addHealthContent(doc, data, yPos, margin, contentWidth);
+      break;
+    case 'finance':
+      yPos = addFinanceContent(doc, data, yPos, margin, contentWidth);
+      break;
+    case 'comprehensive':
+      yPos = addComprehensiveContent(doc, data, yPos, margin, contentWidth);
+      break;
+  }
+  
+  // Add footer
+  if (includeFooter) {
+    const footerText = "Generated by NexaCore • Confidential Report";
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(footerText, pageWidth / 2 - doc.getTextWidth(footerText) / 2, pageHeight - 10);
+  }
+  
+  // Convert to blob
+  const pdfBlob = doc.output('blob');
+  
+  // Generate a URL for the blob
   const url = URL.createObjectURL(pdfBlob);
   
-  return { url, blob: pdfBlob };
+  return { blob: pdfBlob, url };
 };
 
+/**
+ * Download a PDF report
+ */
 export const downloadPDFReport = async (
   data: any,
-  reportType: 'education' | 'health' | 'finance' | 'comprehensive',
-  userName: string,
-  options: Partial<ReportOptions> = {}
+  reportType: ReportType,
+  userName: string = 'User',
+  options: GeneratePDFOptions = {}
 ): Promise<void> => {
   const { blob } = await generatePDFReport(data, reportType, userName, options);
-  const filename = `nexacore_${reportType}_report_${Date.now()}.pdf`;
-  saveAs(blob, filename);
+  saveAs(blob, `nexacore_${reportType}_report.pdf`);
+};
+
+// Helper functions to add content to the PDF
+const addEducationContent = (doc: jsPDF, data: any, yPos: number, margin: number, contentWidth: number): number => {
+  // Handle education reports
+  if (!data || !data.educationLevel) {
+    // Add sample content for demo
+    return addSampleEducationContent(doc, yPos, margin, contentWidth);
+  }
+  
+  // Education level and institution
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Education Overview', margin, yPos);
+  yPos += 8;
+  
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Education Level: ${data.educationLevel}`, margin, yPos);
+  yPos += 6;
+  
+  if (data.institution) {
+    doc.text(`Institution: ${data.institution}`, margin, yPos);
+    yPos += 6;
+  }
+  
+  if (data.fieldOfStudy) {
+    doc.text(`Field of Study: ${data.fieldOfStudy}`, margin, yPos);
+    yPos += 6;
+  }
+  
+  if (data.graduationYear) {
+    doc.text(`Graduation Year: ${data.graduationYear}`, margin, yPos);
+    yPos += 6;
+  }
+  
+  // Skills section
+  if (data.skills && data.skills.length > 0) {
+    yPos += 5;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Skills', margin, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    data.skills.forEach((skill: string) => {
+      doc.text(`• ${skill}`, margin + 5, yPos);
+      yPos += 6;
+    });
+  }
+  
+  // Career section
+  if (data.careerPath || data.careerGoals) {
+    yPos += 5;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Career Development', margin, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.careerPath) {
+      doc.text(`Career Path: ${data.careerPath}`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.careerGoals) {
+      doc.text(`Goals:`, margin, yPos);
+      yPos += 6;
+      
+      // Split long text into multiple lines
+      const textLines = doc.splitTextToSize(data.careerGoals, contentWidth - 10);
+      textLines.forEach((line: string) => {
+        doc.text(line, margin + 5, yPos);
+        yPos += 6;
+      });
+    }
+  }
+  
+  return yPos;
+};
+
+const addHealthContent = (doc: jsPDF, data: any, yPos: number, margin: number, contentWidth: number): number => {
+  // Handle health reports
+  if (!data || (!data.physical && !data.lifestyle && !data.faceAnalysis)) {
+    // Add sample content for demo
+    return addSampleHealthContent(doc, yPos, margin, contentWidth);
+  }
+  
+  // Physical metrics
+  if (data.physical) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Physical Metrics', margin, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.physical.height) {
+      doc.text(`Height: ${data.physical.height} cm`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.physical.weight) {
+      doc.text(`Weight: ${data.physical.weight} kg`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.physical.bloodPressure) {
+      doc.text(`Blood Pressure: ${data.physical.bloodPressure} mmHg`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.physical.heartRate) {
+      doc.text(`Resting Heart Rate: ${data.physical.heartRate} bpm`, margin, yPos);
+      yPos += 6;
+    }
+  }
+  
+  // Lifestyle factors
+  if (data.lifestyle) {
+    yPos += 5;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Lifestyle Factors', margin, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.lifestyle.sleepHours) {
+      doc.text(`Sleep: ${data.lifestyle.sleepHours} hours per night (avg)`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.lifestyle.exerciseFrequency) {
+      const exerciseMap: { [key: string]: string } = {
+        'daily': 'Daily',
+        '3-5_times': '3-5 times per week',
+        '1-2_times': '1-2 times per week',
+        'rarely': 'Rarely',
+        'never': 'Never'
+      };
+      
+      const exerciseText = exerciseMap[data.lifestyle.exerciseFrequency] || data.lifestyle.exerciseFrequency;
+      doc.text(`Exercise Frequency: ${exerciseText}`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.lifestyle.dietType) {
+      const dietMap: { [key: string]: string } = {
+        'omnivore': 'Omnivore',
+        'vegetarian': 'Vegetarian',
+        'vegan': 'Vegan',
+        'paleo': 'Paleo',
+        'keto': 'Keto',
+        'mediterranean': 'Mediterranean'
+      };
+      
+      const dietText = dietMap[data.lifestyle.dietType] || data.lifestyle.dietType;
+      doc.text(`Diet Type: ${dietText}`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.lifestyle.stressLevel) {
+      const stressMap: { [key: string]: string } = {
+        'very_low': 'Very Low',
+        'low': 'Low',
+        'moderate': 'Moderate',
+        'high': 'High',
+        'very_high': 'Very High'
+      };
+      
+      const stressText = stressMap[data.lifestyle.stressLevel] || data.lifestyle.stressLevel;
+      doc.text(`Stress Level: ${stressText}`, margin, yPos);
+      yPos += 6;
+    }
+  }
+  
+  // Face Analysis
+  if (data.faceAnalysis) {
+    yPos += 5;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Facial Analysis Results', margin, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.faceAnalysis.age) {
+      doc.text(`Estimated Age: ${data.faceAnalysis.age} years`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.faceAnalysis.gender) {
+      const genderText = data.faceAnalysis.gender.charAt(0).toUpperCase() + data.faceAnalysis.gender.slice(1);
+      const probability = data.faceAnalysis.genderProbability ? ` (${Math.round(Number(data.faceAnalysis.genderProbability) * 100)}% probability)` : '';
+      doc.text(`Gender: ${genderText}${probability}`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.faceAnalysis.dominantExpression) {
+      const emotionText = data.faceAnalysis.dominantExpression.charAt(0).toUpperCase() + data.faceAnalysis.dominantExpression.slice(1);
+      doc.text(`Dominant Emotion: ${emotionText}`, margin, yPos);
+      yPos += 6;
+    }
+    
+    // Expression Analysis
+    if (data.faceAnalysis.expressions) {
+      yPos += 3;
+      doc.text('Expression Analysis:', margin, yPos);
+      yPos += 6;
+      
+      // Create a sorted list of expressions by probability
+      const expressions = Object.entries(data.faceAnalysis.expressions)
+        .sort((a, b) => Number(b[1]) - Number(a[1]))
+        .slice(0, 7); // Show top 7 expressions
+      
+      expressions.forEach(([expression, probability]: [string, any]) => {
+        const expressionText = expression.charAt(0).toUpperCase() + expression.slice(1);
+        const probabilityText = Math.round(Number(probability) * 100) + '%';
+        doc.text(`• ${expressionText}: ${probabilityText}`, margin + 5, yPos);
+        yPos += 6;
+      });
+    }
+  }
+  
+  return yPos;
+};
+
+const addFinanceContent = (doc: jsPDF, data: any, yPos: number, margin: number, contentWidth: number): number => {
+  // Handle finance reports
+  if (!data || (!data.budget && !data.transactions)) {
+    // Add sample content for demo
+    return addSampleFinanceContent(doc, yPos, margin, contentWidth);
+  }
+  
+  // Budget overview
+  if (data.budget) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Budget Overview', margin, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.budget.monthlyIncome) {
+      doc.text(`Monthly Income: $${data.budget.monthlyIncome}`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.budget.savingsTarget) {
+      doc.text(`Savings Target: ${data.budget.savingsTarget}%`, margin, yPos);
+      yPos += 6;
+    }
+    
+    if (data.budget.categories) {
+      yPos += 3;
+      doc.text('Budget Allocation:', margin, yPos);
+      yPos += 6;
+      
+      Object.entries(data.budget.categories).forEach(([category, percentage]: [string, any]) => {
+        const categoryText = category.charAt(0).toUpperCase() + category.slice(1);
+        doc.text(`• ${categoryText}: ${percentage}%`, margin + 5, yPos);
+        yPos += 6;
+      });
+    }
+  }
+  
+  // Recent transactions
+  if (data.transactions && data.transactions.length > 0) {
+    yPos += 5;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recent Transactions', margin, yPos);
+    yPos += 8;
+    
+    // Table header
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Date', margin, yPos);
+    doc.text('Description', margin + 25, yPos);
+    doc.text('Category', margin + 85, yPos);
+    doc.text('Amount', margin + 125, yPos);
+    yPos += 4;
+    
+    // Divider line
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.2);
+    doc.line(margin, yPos, margin + contentWidth, yPos);
+    yPos += 6;
+    
+    // Table rows
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    
+    data.transactions.slice(0, 10).forEach((tx: any) => {
+      const date = tx.date ? new Date(tx.date).toLocaleDateString() : 'N/A';
+      const description = tx.description || 'Unknown';
+      const category = tx.category || 'Uncategorized';
+      const amount = tx.amount ? (tx.type === 'expense' ? `-$${tx.amount}` : `+$${tx.amount}`) : '$0';
+      
+      doc.text(date, margin, yPos);
+      doc.text(description.substring(0, 30), margin + 25, yPos);
+      doc.text(category, margin + 85, yPos);
+      doc.text(amount, margin + 125, yPos);
+      
+      yPos += 5;
+      
+      // Check if we need a new page
+      if (yPos > 260) {
+        doc.addPage();
+        yPos = 20;
+      }
+    });
+  }
+  
+  return yPos;
+};
+
+const addComprehensiveContent = (doc: jsPDF, data: any, yPos: number, margin: number, contentWidth: number): number => {
+  // Handle comprehensive reports
+  
+  // Executive summary
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Executive Summary', margin, yPos);
+  yPos += 8;
+  
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    'This report provides a holistic overview of your education, health, and financial status. ' +
+    'The analysis includes personalized insights and recommendations based on your data.',
+    margin, yPos, { maxWidth: contentWidth }
+  );
+  yPos += 15;
+  
+  // Education summary
+  if (data.education) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Education Summary', margin, yPos);
+    yPos += 8;
+    
+    yPos = addEducationContent(doc, data.education, yPos, margin, contentWidth);
+    yPos += 10;
+  }
+  
+  // Check if we need a new page
+  if (yPos > 240) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
+  // Health summary
+  if (data.health) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Health & Wellness Summary', margin, yPos);
+    yPos += 8;
+    
+    yPos = addHealthContent(doc, data.health, yPos, margin, contentWidth);
+    yPos += 10;
+  }
+  
+  // Check if we need a new page
+  if (yPos > 240) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
+  // Finance summary
+  if (data.finance) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Financial Summary', margin, yPos);
+    yPos += 8;
+    
+    yPos = addFinanceContent(doc, data.finance, yPos, margin, contentWidth);
+  }
+  
+  return yPos;
+};
+
+// Sample content for when no data is provided
+const addSampleEducationContent = (doc: jsPDF, yPos: number, margin: number, contentWidth: number): number => {
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'italic');
+  doc.text('This is a demonstration education report with placeholder content.', margin, yPos);
+  yPos += 10;
+  
+  doc.setFont('helvetica', 'normal');
+  doc.text('Education Level: Bachelor\'s Degree', margin, yPos);
+  yPos += 6;
+  doc.text('Institution: Sample University', margin, yPos);
+  yPos += 6;
+  doc.text('Field of Study: Computer Science', margin, yPos);
+  yPos += 6;
+  doc.text('Graduation Year: 2022', margin, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Skills', margin, yPos);
+  yPos += 8;
+  
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  const skills = ['JavaScript', 'React', 'Node.js', 'Python', 'SQL'];
+  skills.forEach(skill => {
+    doc.text(`• ${skill}`, margin + 5, yPos);
+    yPos += 6;
+  });
+  
+  return yPos;
+};
+
+const addSampleHealthContent = (doc: jsPDF, yPos: number, margin: number, contentWidth: number): number => {
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'italic');
+  doc.text('This is a demonstration health report with placeholder content.', margin, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Physical Metrics', margin, yPos);
+  yPos += 8;
+  
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Height: 175 cm', margin, yPos);
+  yPos += 6;
+  doc.text('Weight: 70 kg', margin, yPos);
+  yPos += 6;
+  doc.text('Blood Pressure: 120/80 mmHg', margin, yPos);
+  yPos += 6;
+  doc.text('Resting Heart Rate: 72 bpm', margin, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Facial Analysis Results', margin, yPos);
+  yPos += 8;
+  
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Estimated Age: 28 years', margin, yPos);
+  yPos += 6;
+  doc.text('Gender: Male (92% probability)', margin, yPos);
+  yPos += 6;
+  doc.text('Dominant Emotion: Happy', margin, yPos);
+  yPos += 6;
+  
+  doc.text('Expression Analysis:', margin, yPos);
+  yPos += 6;
+  
+  const expressions = [
+    ['Happy', '72%'],
+    ['Neutral', '15%'],
+    ['Surprised', '8%'],
+    ['Sad', '3%'],
+    ['Angry', '1%'],
+    ['Fearful', '1%'],
+    ['Disgusted', '0%']
+  ];
+  
+  expressions.forEach(([emotion, percentage]) => {
+    doc.text(`• ${emotion}: ${percentage}`, margin + 5, yPos);
+    yPos += 6;
+  });
+  
+  return yPos;
+};
+
+const addSampleFinanceContent = (doc: jsPDF, yPos: number, margin: number, contentWidth: number): number => {
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'italic');
+  doc.text('This is a demonstration financial report with placeholder content.', margin, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Budget Overview', margin, yPos);
+  yPos += 8;
+  
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Monthly Income: $4,500', margin, yPos);
+  yPos += 6;
+  doc.text('Savings Target: 20%', margin, yPos);
+  yPos += 6;
+  
+  doc.text('Budget Allocation:', margin, yPos);
+  yPos += 6;
+  
+  const categories = [
+    ['Housing', '30%'],
+    ['Food', '15%'],
+    ['Transportation', '10%'],
+    ['Utilities', '10%'],
+    ['Entertainment', '10%'],
+    ['Other', '5%']
+  ];
+  
+  categories.forEach(([category, percentage]) => {
+    doc.text(`• ${category}: ${percentage}`, margin + 5, yPos);
+    yPos += 6;
+  });
+  
+  return yPos;
+};
+
+/**
+ * Get the appropriate title for a report type
+ */
+const getReportTitle = (reportType: ReportType): string => {
+  switch (reportType) {
+    case 'education':
+      return 'Education Progress Report';
+    case 'health':
+      return 'Health & Wellness Assessment';
+    case 'finance':
+      return 'Financial Status Report';
+    case 'comprehensive':
+      return 'Comprehensive Life Status Report';
+    default:
+      return 'NexaCore Report';
+  }
 };

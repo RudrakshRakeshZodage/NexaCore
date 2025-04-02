@@ -29,34 +29,16 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         // Create models directory if it doesn't exist
         await ensureModelsDirectory();
         
-        // Try loading models
-        try {
-          await Promise.all([
-            faceapi.nets.tinyFaceDetector.load('/'),
-            faceapi.nets.faceLandmark68Net.load('/'),
-            faceapi.nets.faceRecognitionNet.load('/'),
-            faceapi.nets.faceExpressionNet.load('/'),
-            faceapi.nets.ageGenderNet.load('/')
-          ]);
-          
-          setModelsLoaded(true);
-          console.log('Face analysis models loaded successfully');
-          
-          toast({
-            title: 'Models Loaded',
-            description: 'Face analysis models are ready to use.',
-          });
-        } catch (error) {
-          console.error('Error loading models:', error);
-          // For demo purposes, we'll still set modelsLoaded to true
-          setModelsLoaded(true);
-          toast({
-            title: 'Demo Mode',
-            description: 'Running in demo mode with simulated data.',
-          });
-        }
+        // For demo purposes, we'll set modelsLoaded to true without actually loading models
+        setModelsLoaded(true);
+        console.log('Face analysis models loaded in demo mode');
+        
+        toast({
+          title: 'Demo Mode Active',
+          description: 'Running in demo mode with simulated facial analysis.',
+        });
       } catch (error) {
-        console.error('Error loading models:', error);
+        console.error('Error setting up models:', error);
         // For demo purposes, we'll still set modelsLoaded to true
         setModelsLoaded(true);
         toast({
@@ -131,11 +113,11 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
 
-      if (context && video.readyState === 4) {
-        // Set canvas dimensions to match video
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth || 320;
+      canvas.height = video.videoHeight || 240;
+      
+      if (context) {
         // Draw the video frame to canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
@@ -150,11 +132,17 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         analyzeImage(imageDataUrl);
       } else {
         toast({
-          title: 'Camera Not Ready',
-          description: 'Please wait for the camera to initialize fully before capturing.',
+          title: 'Canvas Error',
+          description: 'Could not initialize canvas for capture.',
           variant: 'destructive',
         });
       }
+    } else {
+      toast({
+        title: 'Camera Not Ready',
+        description: 'Please wait for the camera to initialize fully before capturing.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -182,52 +170,28 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         img.onload = () => resolve();
       });
 
-      // For demo purposes, we're using mock data
-      // In a real app, this would use faceapi.detectAllFaces etc.
-      
-      // Mock facial analysis data
+      // Generate mock facial analysis data
       const mockAnalysis = {
         age: Math.floor(Math.random() * 40) + 18, // Random age between 18-58
         gender: Math.random() > 0.5 ? 'male' : 'female',
         genderProbability: (Math.random() * 0.3 + 0.7).toFixed(2), // Random probability between 0.7-1.0
         expressions: {
-          neutral: Math.random() * 0.5,
-          happy: Math.random() * 0.8,
-          sad: Math.random() * 0.3,
-          angry: Math.random() * 0.2,
-          fearful: Math.random() * 0.1,
-          disgusted: Math.random() * 0.1,
-          surprised: Math.random() * 0.3
-        },
-        dominantExpression: 'happy', // We'll calculate this below
-        facialFeatures: {
-          eyeDistance: Math.floor(Math.random() * 20) + 60 + "px",
-          noseWidth: Math.floor(Math.random() * 10) + 30 + "px",
-          lipFullness: Math.floor(Math.random() * 40) + 60 + "%",
-          faceSymmetry: Math.floor(Math.random() * 30) + 70 + "%",
-          eyeSize: Math.floor(Math.random() * 5) + 12 + "mm",
-          foreheadHeight: Math.floor(Math.random() * 20) + 50 + "mm",
-          jawDefinition: Math.floor(Math.random() * 40) + 60 + "%",
-          cheekboneHeight: Math.floor(Math.random() * 20) + 40 + "mm",
-        },
-        facialProportions: {
-          facialIndex: (Math.random() * 0.4 + 1.3).toFixed(2), // Random ratio between 1.3-1.7
-          jawToFaceRatio: (Math.random() * 0.2 + 0.4).toFixed(2), // Random ratio between 0.4-0.6
-          facialThirds: "Balanced",
-          eyeSpacing: Math.floor(Math.random() * 20) + 60 + "%",
-        },
-        skinAnalysis: {
-          texture: ["Smooth", "Normal", "Rough"][Math.floor(Math.random() * 3)],
-          tone: ["Even", "Uneven", "Blotchy"][Math.floor(Math.random() * 3)],
-          spots: Math.floor(Math.random() * 10),
-          wrinkles: Math.floor(Math.random() * 5),
+          neutral: Math.random(),
+          happy: Math.random(),
+          sad: Math.random(),
+          angry: Math.random(),
+          fearful: Math.random(),
+          disgusted: Math.random(),
+          surprised: Math.random()
         }
       };
       
       // Calculate the dominant expression
-      mockAnalysis.dominantExpression = Object.entries(mockAnalysis.expressions)
+      const dominantExpression = Object.entries(mockAnalysis.expressions)
         .reduce((a, b) => a[1] > b[1] ? a : b)[0];
-
+      
+      mockAnalysis.dominantExpression = dominantExpression;
+      
       setAnalysisResults(mockAnalysis);
       
       if (onAnalysisComplete) {
@@ -236,7 +200,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
       
       toast({
         title: 'Analysis Complete',
-        description: 'Facial analysis has been completed successfully.',
+        description: 'Facial expression analysis has been completed successfully.',
       });
     } catch (error) {
       console.error('Analysis error:', error);
@@ -264,7 +228,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
           Face Analysis
         </CardTitle>
         <CardDescription className="text-white/70">
-          Analyze facial expressions, age, features and more using AI
+          Analyze facial expressions using AI
         </CardDescription>
       </CardHeader>
       
@@ -367,7 +331,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
             </div>
             
             <div className="mb-4">
-              <p className="text-white/70 mb-2">Emotional State:</p>
+              <p className="text-white/70 mb-2">Dominant Emotion:</p>
               <Badge className="bg-nexacore-teal text-nexacore-blue-dark font-medium">
                 {analysisResults.dominantExpression.charAt(0).toUpperCase() + analysisResults.dominantExpression.slice(1)}
               </Badge>
@@ -382,54 +346,12 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
                     <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-nexacore-teal rounded-full"
-                        style={{ width: `${probability * 100}%` }}
+                        style={{ width: `${Number(probability) * 100}%` }}
                       ></div>
                     </div>
                     <span className="text-white/80 text-sm ml-2 w-10">
-                      {(probability * 100).toFixed(0)}%
+                      {(Number(probability) * 100).toFixed(0)}%
                     </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <p className="text-white/70 mb-2">Facial Features:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(analysisResults.facialFeatures).map(([feature, value]: [string, any]) => (
-                  <div key={feature} className="flex justify-between">
-                    <span className="text-white/80 text-sm">
-                      {feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                    </span>
-                    <span className="text-white font-medium text-sm">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <p className="text-white/70 mb-2">Facial Proportions:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(analysisResults.facialProportions).map(([proportion, value]: [string, any]) => (
-                  <div key={proportion} className="flex justify-between">
-                    <span className="text-white/80 text-sm">
-                      {proportion.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                    </span>
-                    <span className="text-white font-medium text-sm">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <p className="text-white/70 mb-2">Skin Analysis:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(analysisResults.skinAnalysis).map(([attribute, value]: [string, any]) => (
-                  <div key={attribute} className="flex justify-between">
-                    <span className="text-white/80 text-sm">
-                      {attribute.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                    </span>
-                    <span className="text-white font-medium text-sm">{value}</span>
                   </div>
                 ))}
               </div>
