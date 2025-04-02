@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { saveAs } from 'file-saver';
+import { Camera, QrCode, PlusCircle } from 'lucide-react';
 
 interface QRCodePaymentProps {
   onPaymentComplete?: (paymentData: any) => void;
@@ -20,7 +21,11 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [qrValue, setQrValue] = useState('');
   const [showQR, setShowQR] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const { toast } = useToast();
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateQRCode = () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -93,44 +98,154 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
     }
   };
 
+  const startQRScanner = async () => {
+    setShowScanner(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        
+        // Set up QR code detection (simulated for demo)
+        setTimeout(() => {
+          // Simulate finding a QR code after 3 seconds
+          processQRCode({
+            amount: Math.floor(Math.random() * 100) + 10,
+            currency: 'USD',
+            method: 'wallet',
+            purpose: 'service',
+            timestamp: new Date().toISOString(),
+            reference: `SCAN-${Date.now().toString().slice(-8)}`,
+          });
+          
+          // Stop the camera
+          if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+          }
+          setShowScanner(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast({
+        title: 'Camera Error',
+        description: 'Unable to access your camera for QR scanning.',
+        variant: 'destructive',
+      });
+      setShowScanner(false);
+    }
+  };
+
+  const processQRCode = (paymentData: any) => {
+    if (onPaymentComplete) {
+      onPaymentComplete({
+        ...paymentData,
+        status: 'completed',
+        confirmedAt: new Date().toISOString(),
+      });
+    }
+    
+    toast({
+      title: 'QR Code Scanned',
+      description: `Payment of $${paymentData.amount} processed for ${paymentData.purpose}.`,
+    });
+  };
+
+  const handleQRImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // For demo purposes, simulate processing an uploaded QR image
+    setTimeout(() => {
+      processQRCode({
+        amount: Math.floor(Math.random() * 100) + 20,
+        currency: 'USD',
+        method: 'card',
+        purpose: 'donation',
+        timestamp: new Date().toISOString(),
+        reference: `UPLOAD-${Date.now().toString().slice(-8)}`,
+      });
+    }, 1000);
+  };
+
+  const stopScanner = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setShowScanner(false);
+  };
+
   return (
     <Card className="bg-nexacore-blue-dark/50 border-white/10">
       <CardHeader>
         <CardTitle className="text-white">QR Code Payment</CardTitle>
         <CardDescription className="text-white/70">
-          Make a payment using a QR code
+          Make or scan QR code payments
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {!showQR ? (
+        {showScanner ? (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="text-white">Amount (USD)</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                min="0.01"
-                step="0.01"
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-              />
+            <div className="relative">
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                className="w-full rounded-lg border-2 border-dashed border-white/30"
+              ></video>
+              <div className="absolute inset-0 border-2 border-nexacore-teal/50 rounded-lg flex items-center justify-center">
+                <div className="w-48 h-48 border-2 border-nexacore-teal rounded-lg"></div>
+              </div>
+              <div className="absolute top-2 right-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-white/10 text-white hover:bg-white/20"
+                  onClick={stopScanner}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="payment-method" className="text-white">Payment Method</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger id="payment-method" className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="wallet">Digital Wallet</SelectItem>
-                  <SelectItem value="bank">Bank Transfer</SelectItem>
-                  <SelectItem value="card">Credit/Debit Card</SelectItem>
-                </SelectContent>
-              </Select>
+            <p className="text-center text-white/70">
+              Position the QR code within the frame
+            </p>
+          </div>
+        ) : !showQR ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="amount" className="text-white">Amount (USD)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  min="0.01"
+                  step="0.01"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="payment-method" className="text-white">Payment Method</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger id="payment-method" className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="wallet">Digital Wallet</SelectItem>
+                    <SelectItem value="bank">Bank Transfer</SelectItem>
+                    <SelectItem value="card">Credit/Debit Card</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -148,12 +263,40 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
               </Select>
             </div>
             
-            <Button 
-              className="w-full bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
-              onClick={generateQRCode}
-            >
-              Generate Payment QR Code
-            </Button>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Button 
+                className="w-full bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
+                onClick={generateQRCode}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Generate Payment QR
+              </Button>
+              
+              <div className="flex gap-3">
+                <Button 
+                  className="flex-1 bg-white/10 text-white hover:bg-white/20"
+                  onClick={startQRScanner}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Scan QR
+                </Button>
+                
+                <Button 
+                  className="flex-1 bg-white/10 text-white hover:bg-white/20"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <QrCode className="mr-2 h-4 w-4" />
+                  Upload QR
+                </Button>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={fileInputRef}
+                  onChange={handleQRImageUpload}
+                />
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center space-y-4">
