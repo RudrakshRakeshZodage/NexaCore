@@ -1,590 +1,468 @@
 
-import React, { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Wallet,
-  PieChart,
-  DollarSign,
-  CreditCard,
-  TrendingUp,
-  LineChart,
-  BarChart2,
-  ArrowUpRight,
-  ArrowDownRight,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Send,
-  QrCode,
-  Download,
-  RefreshCw,
-  ChevronRight,
-  FileText,
-  Filter,
-  CalendarDays
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import DashboardLayout from "@/components/DashboardLayout";
+import { useToast } from "@/hooks/use-toast";
+import { downloadPDFReport } from "@/lib/pdfReportGenerator";
+import { PlusCircle, FileText, ChevronRight, CreditCard, BanknoteIcon, ArrowDownUp, Activity } from "lucide-react";
+import QRCodePayment from "@/components/QRCodePayment";
+
+interface Transaction {
+  id: string;
+  date: string;
+  amount: number;
+  description: string;
+  category: string;
+  type: 'income' | 'expense';
+}
 
 const Finance = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [transactions, setTransactions] = useState([
-    { id: 1, type: "income", category: "Salary", amount: 3000, date: "2023-07-20", description: "Monthly salary" },
-    { id: 2, type: "expense", category: "Rent", amount: 1200, date: "2023-07-15", description: "Apartment rent" },
-    { id: 3, type: "expense", category: "Food", amount: 400, date: "2023-07-10", description: "Groceries and dining" },
-    { id: 4, type: "income", category: "Freelance", amount: 500, date: "2023-07-05", description: "Web design project" },
-    { id: 5, type: "expense", category: "Entertainment", amount: 200, date: "2023-07-01", description: "Movies and concerts" },
+  
+  // Budget state
+  const [monthlyIncome, setMonthlyIncome] = useState("");
+  const [savingsTarget, setSavingsTarget] = useState(20);
+  const [housingBudget, setHousingBudget] = useState(30);
+  const [foodBudget, setFoodBudget] = useState(15);
+  const [transportBudget, setTransportBudget] = useState(10);
+  const [utilitiesBudget, setUtilitiesBudget] = useState(10);
+  const [entertainmentBudget, setEntertainmentBudget] = useState(10);
+  const [otherBudget, setOtherBudget] = useState(5);
+  
+  // Transactions state
+  const [transactions, setTransactions] = useState<Transaction[]>([
+    {
+      id: "tx1",
+      date: "2023-10-15",
+      amount: 1500,
+      description: "Monthly Salary",
+      category: "Income",
+      type: "income"
+    },
+    {
+      id: "tx2",
+      date: "2023-10-16",
+      amount: 800,
+      description: "Rent Payment",
+      category: "Housing",
+      type: "expense"
+    },
+    {
+      id: "tx3",
+      date: "2023-10-18",
+      amount: 120,
+      description: "Grocery Shopping",
+      category: "Food",
+      type: "expense"
+    },
+    {
+      id: "tx4",
+      date: "2023-10-20",
+      amount: 45.50,
+      description: "Gas Station",
+      category: "Transportation",
+      type: "expense"
+    }
   ]);
-  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
-  const [transactionType, setTransactionType] = useState("expense");
-  const [transactionCategory, setTransactionCategory] = useState("");
-  const [transactionAmount, setTransactionAmount] = useState("");
-  const [transactionDate, setTransactionDate] = useState<Date | undefined>(new Date());
-  const [transactionDescription, setTransactionDescription] = useState("");
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
-  const [investmentAmount, setInvestmentAmount] = useState(50);
-  const [riskTolerance, setRiskTolerance] = useState(50);
 
-  const handleAddTransaction = () => {
-    if (!transactionCategory || !transactionAmount || !transactionDate || !transactionDescription) {
+  // Goals state
+  const [financialGoals, setFinancialGoals] = useState("");
+  
+  // Handle new payment from QR code
+  const handlePaymentComplete = (paymentData: any) => {
+    const newTransaction: Transaction = {
+      id: `tx${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      amount: paymentData.amount,
+      description: `QR Payment - ${paymentData.purpose}`,
+      category: "Payment",
+      type: "expense"
+    };
+    
+    setTransactions([newTransaction, ...transactions]);
+    
+    toast({
+      title: "Payment Added",
+      description: `Your payment of $${paymentData.amount} has been recorded.`,
+    });
+  };
+
+  // Save budget settings
+  const handleSaveBudget = () => {
+    toast({
+      title: "Budget Saved",
+      description: "Your budget settings have been saved successfully.",
+    });
+  };
+
+  // Generate finance report
+  const handleGenerateReport = async () => {
+    try {
       toast({
-        title: "Error",
-        description: "Please fill in all transaction details.",
+        title: "Generating Report",
+        description: "Please wait while we create your finance report...",
+      });
+      
+      const financeData = {
+        budget: {
+          monthlyIncome,
+          savingsTarget,
+          categories: {
+            housing: housingBudget,
+            food: foodBudget,
+            transport: transportBudget,
+            utilities: utilitiesBudget,
+            entertainment: entertainmentBudget,
+            other: otherBudget
+          }
+        },
+        transactions,
+        goals: financialGoals
+      };
+      
+      await downloadPDFReport(
+        financeData, 
+        'finance', 
+        'NexaCore User', 
+        { includeTimestamp: true }
+      );
+      
+      toast({
+        title: "Report Downloaded",
+        description: "Your finance report has been generated and downloaded",
+      });
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast({
+        title: "Report Error",
+        description: "Failed to generate finance report",
         variant: "destructive",
       });
-      return;
     }
-
-    const newTransaction = {
-      id: transactions.length + 1,
-      type: transactionType,
-      category: transactionCategory,
-      amount: parseFloat(transactionAmount),
-      date: format(transactionDate, 'yyyy-MM-dd'),
-      description: transactionDescription,
-    };
-
-    setTransactions([newTransaction, ...transactions]);
-    setIsTransactionDialogOpen(false);
-
-    toast({
-      title: "Success",
-      description: "Transaction added successfully.",
-    });
-  };
-
-  const handleDeleteTransaction = (id: number) => {
-    setTransactions(transactions.filter((transaction) => transaction.id !== id));
-    toast({
-      title: "Success",
-      description: "Transaction deleted successfully.",
-    });
-  };
-
-  const calculateTotalBalance = () => {
-    let balance = 0;
-    transactions.forEach((transaction) => {
-      if (transaction.type === "income") {
-        balance += transaction.amount;
-      } else {
-        balance -= transaction.amount;
-      }
-    });
-    return balance;
-  };
-
-  const calculateTotalIncome = () => {
-    let income = 0;
-    transactions.forEach((transaction) => {
-      if (transaction.type === "income") {
-        income += transaction.amount;
-      }
-    });
-    return income;
-  };
-
-  const calculateTotalExpenses = () => {
-    let expenses = 0;
-    transactions.forEach((transaction) => {
-      if (transaction.type === "expense") {
-        expenses += transaction.amount;
-      }
-    });
-    return expenses;
-  };
-
-  const investmentReturn = () => {
-    const baseReturn = 0.05;
-    const riskFactor = (riskTolerance - 50) / 100;
-    const adjustedReturn = baseReturn + riskFactor;
-    return investmentAmount * adjustedReturn;
-  };
-
-  const investmentProgress = () => {
-    const maxReturn = investmentAmount * 0.15;
-    const currentReturn = investmentReturn();
-    return (currentReturn / maxReturn) * 100;
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Finance</h1>
-            <p className="text-white/70 dark:text-foreground/70">Manage your finances and track your transactions</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Finance</h1>
+            <p className="text-muted-foreground">Manage your finances, budget, and get personalized financial recommendations.</p>
           </div>
-          <div className="h-12 w-12 rounded-full bg-nexacore-teal/20 dark:bg-primary/20 flex items-center justify-center">
-            <Wallet className="text-nexacore-teal dark:text-primary" size={24} />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={handleSaveBudget}
+            >
+              <CreditCard size={16} />
+              Save Budget
+            </Button>
+            <Button 
+              className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90 flex items-center gap-2"
+              onClick={handleGenerateReport}
+            >
+              <FileText size={16} />
+              Generate Report
+            </Button>
           </div>
         </div>
 
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="bg-white/10 dark:bg-foreground/10 p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">Overview</TabsTrigger>
-            <TabsTrigger value="transactions" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">Transactions</TabsTrigger>
-            <TabsTrigger value="budgeting" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">Budgeting</TabsTrigger>
-            <TabsTrigger value="investments" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">Investments</TabsTrigger>
-            <TabsTrigger value="reports" className="data-[state=active]:bg-nexacore-teal data-[state=active]:dark:bg-primary data-[state=active]:text-nexacore-blue-dark data-[state=active]:dark:text-background">Reports</TabsTrigger>
+        <Tabs defaultValue="budget" className="w-full">
+          <TabsList className="grid grid-cols-4 mb-8">
+            <TabsTrigger value="budget">Budget</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="payments">QR Payments</TabsTrigger>
+            <TabsTrigger value="goals">Goals</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                <CardHeader>
-                  <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                    <DollarSign className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                    Total Balance
-                  </CardTitle>
-                  <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                    Current balance across all accounts
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white dark:text-card-foreground">
-                    ${calculateTotalBalance().toFixed(2)}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                <CardHeader>
-                  <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                    <ArrowUpRight className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                    Total Income
-                  </CardTitle>
-                  <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                    Income from all sources
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white dark:text-card-foreground">
-                    ${calculateTotalIncome().toFixed(2)}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                <CardHeader>
-                  <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                    <ArrowDownRight className="mr-2 text-nexacore-teal dark:text-primary" size={20} />
-                    Total Expenses
-                  </CardTitle>
-                  <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                    Expenses from all categories
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white dark:text-card-foreground">
-                    ${calculateTotalExpenses().toFixed(2)}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
+          {/* Budget Tab */}
+          <TabsContent value="budget" className="space-y-4">
+            <Card className="bg-nexacore-blue-dark/50 border-white/10">
               <CardHeader>
-                <CardTitle className="text-white dark:text-card-foreground">Financial Summary</CardTitle>
-                <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                  Overview of your financial health
+                <CardTitle className="text-white">Budget Allocation</CardTitle>
+                <CardDescription className="text-white/70">
+                  Set your monthly income and allocate your budget
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Income vs Expenses</span>
-                    <LineChart className="h-6 w-6 text-nexacore-teal dark:text-primary" />
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="monthlyIncome" className="text-white">Monthly Income (USD)</Label>
+                  <Input 
+                    id="monthlyIncome" 
+                    placeholder="Enter your monthly income" 
+                    value={monthlyIncome}
+                    onChange={(e) => setMonthlyIncome(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  />
+                </div>
+                
+                <div className="space-y-6 mt-6">
+                  <h3 className="text-xl font-semibold text-white">Budget Allocation (%)</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="savingsTarget" className="text-white">Savings</Label>
+                        <span className="text-white/70">{savingsTarget}%</span>
+                      </div>
+                      <Slider 
+                        id="savingsTarget"
+                        value={[savingsTarget]} 
+                        min={0} 
+                        max={50} 
+                        step={1} 
+                        onValueChange={(value) => setSavingsTarget(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="housingBudget" className="text-white">Housing</Label>
+                        <span className="text-white/70">{housingBudget}%</span>
+                      </div>
+                      <Slider 
+                        id="housingBudget"
+                        value={[housingBudget]} 
+                        min={0} 
+                        max={60} 
+                        step={1} 
+                        onValueChange={(value) => setHousingBudget(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="foodBudget" className="text-white">Food</Label>
+                        <span className="text-white/70">{foodBudget}%</span>
+                      </div>
+                      <Slider 
+                        id="foodBudget"
+                        value={[foodBudget]} 
+                        min={0} 
+                        max={30} 
+                        step={1} 
+                        onValueChange={(value) => setFoodBudget(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="transportBudget" className="text-white">Transportation</Label>
+                        <span className="text-white/70">{transportBudget}%</span>
+                      </div>
+                      <Slider 
+                        id="transportBudget"
+                        value={[transportBudget]} 
+                        min={0} 
+                        max={30} 
+                        step={1} 
+                        onValueChange={(value) => setTransportBudget(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="utilitiesBudget" className="text-white">Utilities</Label>
+                        <span className="text-white/70">{utilitiesBudget}%</span>
+                      </div>
+                      <Slider 
+                        id="utilitiesBudget"
+                        value={[utilitiesBudget]} 
+                        min={0} 
+                        max={30} 
+                        step={1} 
+                        onValueChange={(value) => setUtilitiesBudget(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="entertainmentBudget" className="text-white">Entertainment</Label>
+                        <span className="text-white/70">{entertainmentBudget}%</span>
+                      </div>
+                      <Slider 
+                        id="entertainmentBudget"
+                        value={[entertainmentBudget]} 
+                        min={0} 
+                        max={30} 
+                        step={1} 
+                        onValueChange={(value) => setEntertainmentBudget(value[0])}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="otherBudget" className="text-white">Other</Label>
+                        <span className="text-white/70">{otherBudget}%</span>
+                      </div>
+                      <Slider 
+                        id="otherBudget"
+                        value={[otherBudget]} 
+                        min={0} 
+                        max={30} 
+                        step={1} 
+                        onValueChange={(value) => setOtherBudget(value[0])}
+                      />
+                    </div>
                   </div>
-                  <Progress value={(calculateTotalIncome() / (calculateTotalIncome() + calculateTotalExpenses())) * 100} />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Savings Rate</span>
-                    <TrendingUp className="h-6 w-6 text-nexacore-teal dark:text-primary" />
+                  
+                  <div className="p-4 bg-white/10 rounded-lg">
+                    <h4 className="text-white mb-2">Total Allocation</h4>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/80">
+                        {savingsTarget + housingBudget + foodBudget + transportBudget + utilitiesBudget + entertainmentBudget + otherBudget}%
+                      </span>
+                      <span className={`text-${
+                        savingsTarget + housingBudget + foodBudget + transportBudget + utilitiesBudget + entertainmentBudget + otherBudget === 100
+                          ? "nexacore-teal"
+                          : "nexacore-orange"
+                      }`}>
+                        {savingsTarget + housingBudget + foodBudget + transportBudget + utilitiesBudget + entertainmentBudget + otherBudget === 100
+                          ? "Budget balanced!"
+                          : "Budget should total 100%"}
+                      </span>
+                    </div>
                   </div>
-                  <Progress value={((calculateTotalBalance() / calculateTotalIncome()) * 100)} />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Debt to Income Ratio</span>
-                    <CreditCard className="h-6 w-6 text-nexacore-teal dark:text-primary" />
-                  </div>
-                  <Progress value={50} />
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Transactions Tab */}
-          <TabsContent value="transactions" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Search transactions..."
-                  className="w-64 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground"
-                />
-                <Button
-                  variant="outline"
-                  className="border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-              </div>
-              <Button
-                className="bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90"
-                onClick={() => setIsTransactionDialogOpen(true)}
-              >
-                Add Transaction
-              </Button>
-            </div>
-
-            {transactions.length === 0 ? (
-              <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                <CardContent className="flex flex-col items-center justify-center p-12">
-                  <FileText className="h-16 w-16 text-white/20 dark:text-card-foreground/20 mb-4" />
-                  <h3 className="text-xl font-medium text-white dark:text-card-foreground mb-2">No Transactions Yet</h3>
-                  <p className="text-white/70 dark:text-card-foreground/70 text-center max-w-md mb-6">
-                    You haven't added any transactions yet. Click the button above to add your first transaction.
-                  </p>
-                  <Button
-                    className="bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90"
-                    onClick={() => setIsTransactionDialogOpen(true)}
-                  >
-                    Add Your First Transaction
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {transactions.map((transaction) => (
-                  <Card key={transaction.id} className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <CardTitle className="text-white dark:text-card-foreground flex items-center">
-                            {transaction.type === "income" ? (
-                              <ArrowUpRight className="mr-2 text-green-400" size={18} />
-                            ) : (
-                              <ArrowDownRight className="mr-2 text-red-400" size={18} />
-                            )}
-                            {transaction.category}
-                          </CardTitle>
-                          <CardDescription className="text-white/70 dark:text-card-foreground/70 flex items-center">
-                            <Clock className="mr-1 h-3 w-3" />
-                            {transaction.date}
-                          </CardDescription>
-                        </div>
-                        <Badge className={transaction.type === "income" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}>
-                          {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pb-2 pt-0">
-                      <p className="text-sm text-white/80 dark:text-card-foreground/80">
-                        {transaction.description}
-                      </p>
-                    </CardContent>
-                    <CardFooter className="flex justify-between items-center">
-                      <div className="text-xl font-bold text-white dark:text-card-foreground">
-                        ${transaction.amount.toFixed(2)}
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground hover:bg-white/10 dark:hover:bg-foreground/10"
-                        onClick={() => handleDeleteTransaction(transaction.id)}
+          <TabsContent value="transactions" className="space-y-4">
+            <Card className="bg-nexacore-blue-dark/50 border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <ArrowDownUp className="mr-2 text-nexacore-teal" size={20} />
+                  Transaction History
+                </CardTitle>
+                <CardDescription className="text-white/70">
+                  View and manage your recent financial transactions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {transactions.length > 0 ? (
+                    transactions.map((transaction) => (
+                      <div 
+                        key={transaction.id} 
+                        className="flex items-center justify-between p-3 rounded-lg bg-white/10"
                       >
-                        Delete
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
-              <DialogContent className="sm:max-w-[425px] bg-nexacore-blue-dark/90 dark:bg-card border-white/10 dark:border-border text-white dark:text-card-foreground">
-                <DialogHeader>
-                  <DialogTitle>Add Transaction</DialogTitle>
-                  <DialogDescription>
-                    Add a new income or expense transaction to track your finances.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="type" className="text-right">
-                      Type
-                    </Label>
-                    <Select value={transactionType} onValueChange={setTransactionType}>
-                      <SelectTrigger className="col-span-3 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="income">Income</SelectItem>
-                        <SelectItem value="expense">Expense</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">
-                      Category
-                    </Label>
-                    <Input
-                      id="category"
-                      value={transactionCategory}
-                      onChange={(e) => setTransactionCategory(e.target.value)}
-                      className="col-span-3 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">
-                      Amount
-                    </Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      value={transactionAmount}
-                      onChange={(e) => setTransactionAmount(e.target.value)}
-                      className="col-span-3 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="date" className="text-right">
-                      Date
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] justify-start text-left font-normal bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground",
-                            !selectedDate && "text-muted-foreground"
-                          )}
-                        >
-                          {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-                          <CalendarDays className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-nexacore-blue-dark/90 dark:bg-card border-white/10 dark:border-border">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          disabled={(date) =>
-                            date > new Date()
-                          }
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="description" className="text-right">
-                      Description
-                    </Label>
-                    <Input
-                      id="description"
-                      value={transactionDescription}
-                      onChange={(e) => setTransactionDescription(e.target.value)}
-                      className="col-span-3 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" onClick={handleAddTransaction} className="bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90">
-                    Add Transaction
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </TabsContent>
-
-          {/* Budgeting Tab */}
-          <TabsContent value="budgeting" className="space-y-6">
-            <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-              <CardHeader>
-                <CardTitle className="text-white dark:text-card-foreground">Budget Overview</CardTitle>
-                <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                  Track your spending and set budget goals
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Monthly Budget</span>
-                    <Input
-                      type="number"
-                      placeholder="Enter budget amount"
-                      className="w-32 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Spending Progress</span>
-                    <BarChart2 className="h-6 w-6 text-nexacore-teal dark:text-primary" />
-                  </div>
-                  <Progress value={60} />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Remaining Budget</span>
-                    <div className="text-xl font-bold text-white dark:text-card-foreground">$400</div>
-                  </div>
+                        <div className="flex items-center">
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
+                            transaction.type === 'income' ? 'bg-green-500/20' : 'bg-red-500/20'
+                          }`}>
+                            {transaction.type === 'income' ? (
+                              <BanknoteIcon className="h-5 w-5 text-green-400" />
+                            ) : (
+                              <CreditCard className="h-5 w-5 text-red-400" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">{transaction.description}</p>
+                            <p className="text-white/60 text-sm">{transaction.date} • {transaction.category}</p>
+                          </div>
+                        </div>
+                        <div className={`font-medium ${
+                          transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 text-white/60">
+                      <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No transactions found</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
-            </Card>
-
-            <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-              <CardHeader>
-                <CardTitle className="text-white dark:text-card-foreground">Spending Categories</CardTitle>
-                <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                  Track your spending by category
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Food & Dining</span>
-                    <Progress value={70} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Transportation</span>
-                    <Progress value={40} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Entertainment</span>
-                    <Progress value={90} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Investments Tab */}
-          <TabsContent value="investments" className="space-y-6">
-            <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-              <CardHeader>
-                <CardTitle className="text-white dark:text-card-foreground">Investment Portfolio</CardTitle>
-                <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                  Manage your investments and track returns
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Investment Amount</span>
-                    <Input
-                      type="number"
-                      placeholder="Enter investment amount"
-                      value={investmentAmount}
-                      onChange={(e) => setInvestmentAmount(parseInt(e.target.value))}
-                      className="w-32 bg-white/10 dark:bg-foreground/10 border-white/20 dark:border-foreground/20 text-white dark:text-card-foreground"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Risk Tolerance</span>
-                    <Slider
-                      defaultValue={[riskTolerance]}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) => setRiskTolerance(value[0])}
-                      className="w-32"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Expected Return</span>
-                    <div className="text-xl font-bold text-white dark:text-card-foreground">${investmentReturn().toFixed(2)}</div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Progress</span>
-                    <TrendingUp className="h-6 w-6 text-nexacore-teal dark:text-primary" />
-                  </div>
-                  <Progress value={investmentProgress()} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-              <CardHeader>
-                <CardTitle className="text-white dark:text-card-foreground">Investment Opportunities</CardTitle>
-                <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                  Explore investment options based on your risk profile
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Stocks</span>
-                    <Progress value={80} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Bonds</span>
-                    <Progress value={50} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white dark:text-card-foreground">Real Estate</span>
-                    <Progress value={20} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Reports Tab */}
-          <TabsContent value="reports" className="space-y-6">
-            <Card className="bg-nexacore-blue-dark/50 dark:bg-card border-white/10 dark:border-border">
-              <CardHeader>
-                <CardTitle className="text-white dark:text-card-foreground">Financial Reports</CardTitle>
-                <CardDescription className="text-white/70 dark:text-card-foreground/70">
-                  Generate detailed financial reports
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center p-12">
-                <FileText className="h-16 w-16 text-white/20 dark:text-card-foreground/20 mb-4" />
-                <h3 className="text-xl font-medium text-white dark:text-card-foreground mb-2">Generate Financial Reports</h3>
-                <p className="text-white/70 dark:text-card-foreground/70 text-center max-w-md mb-6">
-                  Generate detailed financial reports to track your income, expenses, and investments.
-                </p>
-                <Button className="bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90">
-                  Generate Report
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  View All
                 </Button>
+                <Button className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Transaction
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* QR Payments Tab */}
+          <TabsContent value="payments" className="space-y-4">
+            <QRCodePayment onPaymentComplete={handlePaymentComplete} />
+          </TabsContent>
+
+          {/* Goals Tab */}
+          <TabsContent value="goals" className="space-y-4">
+            <Card className="bg-nexacore-blue-dark/50 border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white">Financial Goals</CardTitle>
+                <CardDescription className="text-white/70">
+                  Set and track your financial goals
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="financialGoals" className="text-white">Your Financial Goals</Label>
+                  <Textarea 
+                    id="financialGoals" 
+                    placeholder="Describe your financial goals..." 
+                    value={financialGoals}
+                    onChange={(e) => setFinancialGoals(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 min-h-[100px]"
+                  />
+                </div>
+                
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold text-white mb-3">AI-Suggested Goals</h3>
+                  
+                  <div className="space-y-3">
+                    {[
+                      {
+                        title: "Emergency Fund",
+                        description: "Save 3-6 months of expenses for emergencies.",
+                        timeframe: "6-12 months"
+                      },
+                      {
+                        title: "Debt Reduction",
+                        description: "Pay off high-interest debt like credit cards.",
+                        timeframe: "12-18 months"
+                      },
+                      {
+                        title: "Retirement Planning",
+                        description: "Contribute to retirement accounts regularly.",
+                        timeframe: "Ongoing"
+                      }
+                    ].map((goal, index) => (
+                      <div key={index} className="p-3 rounded-lg bg-white/10">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-white font-medium">{goal.title}</h4>
+                            <p className="text-white/70 text-sm">{goal.description}</p>
+                          </div>
+                          <div className="text-nexacore-teal text-sm">
+                            {goal.timeframe}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" className="mt-2 text-white/70 hover:text-white">
+                          Add to Goals
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
