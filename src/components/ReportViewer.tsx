@@ -77,7 +77,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({
   };
 
   return (
-    <Card className={`bg-nexacore-blue-dark/90 border-nexacore-teal/20 text-white ${className}`}>
+    <Card className={`bg-nexacore-blue-dark/50 border-nexacore-teal/20 text-white ${className}`}>
       <CardHeader>
         <CardTitle className="flex items-center">
           <FileText className="mr-2 text-nexacore-teal" size={20} />

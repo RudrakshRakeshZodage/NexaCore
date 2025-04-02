@@ -3,7 +3,7 @@ import { jsPDF } from 'jspdf';
 import { saveAs } from 'file-saver';
 
 // Logo for the PDF (base64 encoded image)
-const NEXACORE_LOGO = 'data:image/png;base64,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';
+const NEXACORE_LOGO = 'data:image/png;base64,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';
 
 interface ReportOptions {
   userName: string;
@@ -223,7 +223,7 @@ export class PDFReportGenerator {
             value: 'Based on your education profile and career goals, we have analyzed your current skills and identified opportunities for growth.'
           },
           {
-            type: 'subheading',
+            type: 'heading2',
             value: 'Current Education Status'
           },
           {
@@ -239,7 +239,7 @@ export class PDFReportGenerator {
             value: data.education?.fieldOfStudy ? `Field of Study: ${data.education.fieldOfStudy}` : 'Field of study not specified'
           },
           {
-            type: 'subheading',
+            type: 'heading2',
             value: 'Recommendations'
           },
           {
@@ -267,7 +267,7 @@ export class PDFReportGenerator {
             value: 'Your health data has been analyzed to provide personalized recommendations for improving your overall well-being.'
           },
           {
-            type: 'subheading',
+            type: 'heading2',
             value: 'Current Health Status'
           }
         ]
@@ -300,7 +300,7 @@ export class PDFReportGenerator {
             value: 'Based on your financial data, we have analyzed your current financial status and identified opportunities for improvement.'
           },
           {
-            type: 'subheading',
+            type: 'heading2',
             value: 'Recent Transactions'
           }
         ]

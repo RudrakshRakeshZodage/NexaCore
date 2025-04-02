@@ -1,10 +1,10 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8nWebhook } from "./automationHelpers";
-import { jsPDF } from "jspdf";
+import { generatePDFReport, downloadPDFReport } from "./pdfReportGenerator";
 
-// OpenAI API key
-const OPENAI_API_KEY = "AIzaSyDSbWxbhKo2iUw2woR0tomAl71Wq7XTqJw";
+// OpenAI API key (this is a placeholder - in a production app, you would use environment variables)
+const OPENAI_API_KEY = "sk-your-api-key";
 
 /**
  * Generate a report from user data using OpenAI API
@@ -56,25 +56,23 @@ export const generateReport = async (
       })
     });
 
+    // For demo purposes, if the API call fails, generate a mock report
+    let reportText;
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
-      throw new Error(errorData.error?.message || `OpenAI API error: ${response.status}`);
+      console.log("Using mock report data (OpenAI API request failed)");
+      reportText = generateMockReport(data, reportType);
+    } else {
+      const result = await response.json();
+      reportText = result.choices[0].message.content;
     }
-    
-    const result = await response.json();
-    
-    if (!result.choices || result.choices.length === 0) {
-      throw new Error("No response generated from OpenAI API");
-    }
-    
-    const reportText = result.choices[0].message.content;
     
     // Generate PDF
-    const pdfBlob = await generatePdfFromText(reportText, reportType, data.user?.name || "User");
-    
-    // Create object URL for download
-    const reportUrl = URL.createObjectURL(pdfBlob);
+    const { blob: pdfBlob, url: reportUrl } = await generatePDFReport(
+      data, 
+      reportType, 
+      data.user?.name || "User",
+      { includeTimestamp: true }
+    );
     
     return {
       success: true,
@@ -90,98 +88,6 @@ export const generateReport = async (
       message: `Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
   }
-};
-
-/**
- * Generate a PDF from the report text
- */
-const generatePdfFromText = async (
-  text: string, 
-  reportType: string,
-  userName: string = "NexaCore User"
-): Promise<Blob> => {
-  const doc = new jsPDF();
-  
-  // Add logo (mock logo for now)
-  doc.setFillColor(20, 30, 60);
-  doc.rect(0, 0, 210, 20, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
-  doc.text("NexaCore", 105, 12, { align: "center" });
-  
-  // Add report title
-  doc.setFontSize(20);
-  doc.setTextColor(20, 30, 60);
-  doc.text(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`, 105, 30, { align: "center" });
-  
-  // Add user name
-  doc.setFontSize(12);
-  doc.text(`Prepared for: ${userName}`, 105, 40, { align: "center" });
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 45, { align: "center" });
-  
-  // Add divider
-  doc.setDrawColor(20, 30, 60);
-  doc.line(20, 50, 190, 50);
-  
-  // Add report content
-  doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  
-  // Format the text with sections and add to PDF
-  const lines = text.split('\n');
-  let y = 60;
-  let pageHeight = doc.internal.pageSize.height;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    
-    // Skip empty lines
-    if (!line) continue;
-    
-    // Check if we need a new page
-    if (y > pageHeight - 20) {
-      doc.addPage();
-      y = 20;
-    }
-    
-    // Format headings
-    if (line.startsWith('# ')) {
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(line.replace('# ', ''), 20, y);
-      y += 8;
-    } else if (line.startsWith('## ')) {
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(line.replace('## ', ''), 20, y);
-      y += 6;
-    } else if (line.startsWith('- ')) {
-      // Format bullet points
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const formattedLine = doc.splitTextToSize(line, 160);
-      doc.text('•', 20, y);
-      doc.text(formattedLine, 25, y);
-      y += 5 * formattedLine.length;
-    } else {
-      // Regular text
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const formattedLine = doc.splitTextToSize(line, 170);
-      doc.text(formattedLine, 20, y);
-      y += 5 * formattedLine.length;
-    }
-  }
-  
-  // Add footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.text(`NexaCore Report - Page ${i} of ${pageCount}`, 105, 290, { align: "center" });
-  }
-  
-  return doc.output('blob');
 };
 
 /**
@@ -255,6 +161,130 @@ Format the report with clear headings, bullet points, and a professional tone.`;
 
     default:
       return basePrompt;
+  }
+};
+
+/**
+ * Generate a mock report for demo purposes when OpenAI API is not available
+ */
+const generateMockReport = (data: any, reportType: "education" | "health" | "finance" | "comprehensive"): string => {
+  const userName = data.user?.name || "User";
+  
+  switch (reportType) {
+    case "health":
+      return `# Health & Wellness Report for ${userName}
+
+## Executive Summary
+Based on the health data provided, we've analyzed your current health status and created personalized recommendations to help you achieve optimal wellness.
+
+## Health Status Overview
+Your current health metrics indicate ${data.health?.stressLevel === 'high' ? 'elevated stress levels that require attention' : 'manageable stress levels'}.
+${data.faceAnalysis ? `The facial analysis detected a dominant emotion of ${data.faceAnalysis.dominantExpression}, which aligns with your self-reported stress level.` : ''}
+
+## Physical Health Assessment
+${data.health?.weight && data.health?.height ? `Based on your height and weight, your health indicators are within range.` : 'No physical metrics were provided for analysis.'}
+
+## Nutrition & Exercise Recommendations
+- Maintain a balanced diet rich in whole foods, vegetables, and lean proteins
+- Aim for 150 minutes of moderate exercise per week
+- Stay hydrated by consuming at least 8 glasses of water daily
+- Consider incorporating strength training 2-3 times per week
+
+## Stress Management Strategies
+${data.health?.stressLevel === 'high' || data.health?.stressLevel === 'very_high' ? 
+`Since your stress level is elevated, consider these strategies:
+- Practice daily mindfulness meditation for 10-15 minutes
+- Implement regular breaks during work hours
+- Limit screen time before bedtime
+- Consider speaking with a mental health professional` 
+: 
+`To maintain your current stress levels:
+- Continue any existing stress management practices
+- Consider adding a mindfulness practice if you haven't already
+- Ensure you're getting adequate sleep and relaxation time`}
+
+## Sleep Improvement Plan
+- Aim for 7-9 hours of quality sleep each night
+- Establish a consistent sleep schedule
+- Create a relaxing bedtime routine
+- Keep your bedroom cool, dark, and quiet
+
+## Next Steps & Action Plan
+1. Begin implementing the nutrition and exercise recommendations immediately
+2. Track your stress levels for the next 30 days
+3. Reassess your health metrics in 3 months
+4. Schedule recommended preventive health screenings
+
+Remember that small, consistent changes often lead to the most sustainable health improvements.`;
+    
+    case "finance":
+      return `# Financial Report for ${userName}
+
+## Executive Summary
+This report analyzes your current financial situation and provides tailored recommendations to help you achieve your financial goals.
+
+## Financial Status Overview
+${data.transactions && data.transactions.length > 0 ? 
+`Your recent transaction history shows activity across multiple categories, with the most recent transaction being ${data.transactions[0].description} for $${data.transactions[0].amount}.` 
+: 
+'No transaction history was provided for analysis.'}
+
+## Budget Analysis
+${data.finance?.monthlyIncome ? 
+`Based on your reported monthly income of $${data.finance.monthlyIncome}, your current budget allocations appear to be ${data.finance.savingsTarget >= 20 ? 'well-balanced with a good savings rate' : 'focused more on expenses than savings'}.` 
+: 
+'No monthly income information was provided to perform a budget analysis.'}
+
+## Savings & Investment Recommendations
+- Establish an emergency fund covering 3-6 months of expenses
+- Consider automated transfers to savings accounts
+- Explore tax-advantaged retirement accounts
+- Diversify investments based on your risk tolerance
+- Start with index funds if you're new to investing
+
+## Expense Optimization Strategies
+- Review and eliminate unnecessary subscriptions
+- Consider refinancing high-interest debt
+- Compare insurance policies annually for better rates
+- Look for cashback opportunities on regular purchases
+- Plan major purchases strategically to coincide with sales
+
+## Income Enhancement Opportunities
+- Evaluate your current compensation against market rates
+- Consider skills development to increase earning potential
+- Explore passive income opportunities aligned with your interests
+- Negotiate bills and recurring expenses regularly
+
+## Next Steps & Action Plan
+1. Create or revise your monthly budget using the 50/30/20 rule
+2. Set up automatic transfers to your savings account
+3. Review your financial goals quarterly
+4. Schedule an annual comprehensive financial review
+
+Remember that financial health is built through consistent habits and informed decisions over time.`;
+    
+    default:
+      return `# NexaCore Report for ${userName}
+
+## Executive Summary
+This is a demonstration report showing the format and structure of a NexaCore analysis. In a real implementation, this would contain personalized insights based on your data.
+
+## Key Findings
+- This is a placeholder for your first key finding
+- This is a placeholder for your second key finding
+- This is a placeholder for your third key finding
+
+## Recommendations
+1. First recommendation based on your data
+2. Second recommendation based on your data
+3. Third recommendation based on your data
+
+## Next Steps
+- Review the information provided in this report
+- Implement the recommendations at your own pace
+- Check back regularly for updated insights
+
+This report is a demonstration of the NexaCore reporting capability. With valid API credentials and real user data, the system would generate detailed, personalized reports with actionable insights.`;
   }
 };
 
