@@ -198,6 +198,59 @@ export class PDFReportGenerator {
     }
   }
 
+  addFaceAnalysisSection(faceAnalysis: any): void {
+    if (!faceAnalysis) return;
+    
+    this.checkPageBreak(10);
+    
+    // Add section title
+    this.addSubheading('Facial Analysis Results');
+    
+    // Add base information
+    this.addBulletPoint(`Age estimate: ${faceAnalysis.age} years`);
+    this.addBulletPoint(`Gender estimate: ${faceAnalysis.gender} (${(Number(faceAnalysis.genderProbability || 0) * 100).toFixed(0)}% confidence)`);
+    this.addBulletPoint(`Dominant emotion: ${faceAnalysis.dominantExpression}`);
+    
+    // Add emotional analysis
+    this.addSubheading('Emotional Analysis');
+    this.addText('Your facial expression analysis shows the following emotional states:');
+    
+    if (faceAnalysis.expressions) {
+      Object.entries(faceAnalysis.expressions).forEach(([emotion, value]: [string, any]) => {
+        this.addBulletPoint(`${emotion.charAt(0).toUpperCase() + emotion.slice(1)}: ${(value * 100).toFixed(0)}%`);
+      });
+    }
+    
+    // Add facial features if available
+    if (faceAnalysis.facialFeatures) {
+      this.addSubheading('Facial Features');
+      Object.entries(faceAnalysis.facialFeatures).forEach(([feature, value]: [string, any]) => {
+        const formattedFeature = feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        this.addBulletPoint(`${formattedFeature}: ${value}`);
+      });
+    }
+    
+    // Add facial proportions if available
+    if (faceAnalysis.facialProportions) {
+      this.addSubheading('Facial Proportions');
+      Object.entries(faceAnalysis.facialProportions).forEach(([proportion, value]: [string, any]) => {
+        const formattedProportion = proportion.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        this.addBulletPoint(`${formattedProportion}: ${value}`);
+      });
+    }
+    
+    // Add skin analysis if available
+    if (faceAnalysis.skinAnalysis) {
+      this.addSubheading('Skin Analysis');
+      Object.entries(faceAnalysis.skinAnalysis).forEach(([attribute, value]: [string, any]) => {
+        const formattedAttribute = attribute.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        this.addBulletPoint(`${formattedAttribute}: ${value}`);
+      });
+    }
+    
+    this.addText('\nFacial analysis can provide insights into emotional well-being and stress levels. Regular monitoring can help identify patterns and manage mental health more effectively.');
+  }
+
   async generateReport(data: any, reportType: 'education' | 'health' | 'finance' | 'comprehensive'): Promise<Blob> {
     // Add report header
     this.addHeader();
@@ -275,11 +328,7 @@ export class PDFReportGenerator {
       
       // Add face analysis results if available
       if (data.faceAnalysis) {
-        this.addSubheading('Facial Analysis Results');
-        this.addBulletPoint(`Age estimate: ${data.faceAnalysis.age} years`);
-        this.addBulletPoint(`Gender estimate: ${data.faceAnalysis.gender}`);
-        this.addBulletPoint(`Dominant emotion: ${data.faceAnalysis.dominantExpression}`);
-        this.addText('Your facial expression analysis suggests trends in your emotional state that can be indicators of overall well-being. Regular monitoring of emotional patterns can help identify stress triggers and manage mental health.');
+        this.addFaceAnalysisSection(data.faceAnalysis);
       } else {
         this.addText('No facial analysis data available. Consider using our facial analysis tool to get insights into your emotional well-being.');
       }

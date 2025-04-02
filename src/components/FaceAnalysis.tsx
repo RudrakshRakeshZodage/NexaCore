@@ -132,13 +132,21 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
       const context = canvas.getContext('2d');
 
       if (context && video.readyState === 4) {
+        // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+        
+        // Draw the video frame to canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
+        // Convert to data URL
         const imageDataUrl = canvas.toDataURL('image/png');
         setImage(imageDataUrl);
+        
+        // Stop camera after capture
         stopCamera();
+        
+        // Analyze the captured image
         analyzeImage(imageDataUrl);
       } else {
         toast({
@@ -286,6 +294,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
                 playsInline
                 muted
                 className="rounded-lg border border-white/20 max-h-64 bg-black/40"
+                style={{ width: "320px", height: "240px" }}
               />
               <canvas ref={canvasRef} className="hidden" />
             </div>
@@ -298,6 +307,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10"
               onClick={startCamera}
+              disabled={isCameraActive}
             >
               <Camera className="mr-2 h-4 w-4" />
               Start Camera
