@@ -1,5 +1,6 @@
+
 import jsPDF from 'jspdf';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import { saveAs } from 'file-saver';
 
 // Types

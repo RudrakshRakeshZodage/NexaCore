@@ -20,13 +20,32 @@ export function ThemeToggle() {
       document.body.classList.remove('transition-colors', 'duration-300');
     };
   }, []);
+
+  // Effect to ensure correct theme application
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
+      document.body.style.color = 'hsl(210, 40%, 98%)';
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+      document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
+      document.body.style.color = 'hsl(222, 47%, 11%)';
+    }
+  }, [theme]);
   
   return (
     <Button
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="rounded-full hover:bg-slate-200 dark:hover:bg-slate-700"
+      className={theme === 'dark' 
+        ? "rounded-full bg-gray-800 hover:bg-gray-700" 
+        : "rounded-full bg-gray-100 hover:bg-gray-200"}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
     >
       {theme === "dark" ? (

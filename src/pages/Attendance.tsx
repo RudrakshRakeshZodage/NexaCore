@@ -24,12 +24,14 @@ const Attendance = () => {
   const [attendanceSubmitted, setAttendanceSubmitted] = useState(false);
   const [attendanceHistory, setAttendanceHistory] = useState<Attendance[]>([]);
   const [isWithinRange, setIsWithinRange] = useState(false);
+  const [distance, setDistance] = useState<number | null>(null);
 
-  // Example campus location (Viva Institute of Technology, Virar coordinates)
+  // VIVA Institute of Technology exact coordinates
   const campusLocation = {
     latitude: 19.4558,
     longitude: 72.8021,
-    name: "Viva Institute of Technology, Virar",
+    name: "VIVA Institute of Technology",
+    address: "Shirgaon, Veer Sawarkar road, Tal, East, Chandansar, Virar, Vasai, Maharashtra 401305",
     radius: 300, // meters
   };
 
@@ -59,14 +61,15 @@ const Attendance = () => {
         setLocation(position.coords);
         
         // Calculate distance between user and campus
-        const distance = calculateDistance(
+        const calculatedDistance = calculateDistance(
           position.coords.latitude,
           position.coords.longitude,
           campusLocation.latitude,
           campusLocation.longitude
         );
         
-        const withinRange = distance <= campusLocation.radius;
+        setDistance(calculatedDistance);
+        const withinRange = calculatedDistance <= campusLocation.radius;
         setIsWithinRange(withinRange);
         
         setLocationStatus("success");
@@ -74,8 +77,8 @@ const Attendance = () => {
         toast({
           title: withinRange ? "Location Verified" : "Outside Campus Range",
           description: withinRange 
-            ? `You are within ${Math.round(distance)}m of ${campusLocation.name}` 
-            : `You are ${Math.round(distance)}m away from ${campusLocation.name}`,
+            ? `You are within ${Math.round(calculatedDistance)}m of ${campusLocation.name}` 
+            : `You are ${Math.round(calculatedDistance)}m away from ${campusLocation.name}`,
           variant: withinRange ? "default" : "destructive",
         });
       },
@@ -190,10 +193,14 @@ const Attendance = () => {
                 theme === 'dark' ? 'bg-gray-700/30' : 'bg-gray-50'
               }`}>
                 <h3 className="text-lg font-medium mb-2">Campus Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Name:</p>
                     <p className="font-medium">{campusLocation.name}</p>
+                  </div>
+                  <div>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Address:</p>
+                    <p className="font-medium">{campusLocation.address}</p>
                   </div>
                   <div>
                     <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Attendance Radius:</p>
@@ -314,7 +321,7 @@ const Attendance = () => {
                       theme === 'dark' ? 'bg-gray-700/30' : 'bg-gray-50'
                     }`}>
                       <h3 className="text-lg font-medium mb-2">Your Location</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Latitude:</p>
                           <p className="font-mono">{location.latitude.toFixed(6)}</p>
@@ -322,6 +329,10 @@ const Attendance = () => {
                         <div>
                           <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Longitude:</p>
                           <p className="font-mono">{location.longitude.toFixed(6)}</p>
+                        </div>
+                        <div>
+                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Distance:</p>
+                          <p className="font-medium">{distance ? `${Math.round(distance)} meters` : 'N/A'}</p>
                         </div>
                       </div>
                     </div>

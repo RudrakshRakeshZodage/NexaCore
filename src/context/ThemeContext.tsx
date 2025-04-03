@@ -31,6 +31,7 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
 
+  // Apply theme changes to the DOM
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -43,8 +44,26 @@ export function ThemeProvider({
         ? "dark"
         : "light";
       root.classList.add(systemTheme);
+      
+      // Also set body background for consistent theme application
+      if (systemTheme === 'dark') {
+        document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
+        document.body.style.color = 'hsl(210, 40%, 98%)';
+      } else {
+        document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
+        document.body.style.color = 'hsl(222, 47%, 11%)';
+      }
     } else {
       root.classList.add(theme);
+      
+      // Set body background for consistent theme application
+      if (theme === 'dark') {
+        document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
+        document.body.style.color = 'hsl(210, 40%, 98%)';
+      } else {
+        document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
+        document.body.style.color = 'hsl(222, 47%, 11%)';
+      }
     }
 
     // Update color meta tags for mobile browsers
@@ -70,6 +89,15 @@ export function ThemeProvider({
         
         root.classList.remove("light", "dark");
         root.classList.add(systemTheme);
+        
+        // Update body background color too
+        if (systemTheme === 'dark') {
+          document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
+          document.body.style.color = 'hsl(210, 40%, 98%)';
+        } else {
+          document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
+          document.body.style.color = 'hsl(222, 47%, 11%)';
+        }
       };
       
       mediaQuery.addEventListener("change", handleChange);
