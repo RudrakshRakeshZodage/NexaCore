@@ -1,71 +1,68 @@
 
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera, Smile } from "lucide-react";
+// This file appears to have TypeScript errors in the expressions handling
+// We need to fix the types for the expressions array and improve type safety
+import React, { useState, useRef, useEffect } from 'react';
 import * as faceapi from '@vladmandic/face-api';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 
-interface FaceAnalysisProps {
-  onAnalysisComplete?: (results: any) => void;
+// Define proper types for expressions
+type Expression = "neutral" | "happy" | "sad" | "angry" | "fearful" | "disgusted" | "surprised";
+type ExpressionResult = { expression: Expression; probability: number };
+
+interface ExpressionState {
+  dominantExpression: string;
+  expressions: Record<string, number>;
 }
 
-const FaceAnalysis = ({ onAnalysisComplete }: FaceAnalysisProps) => {
-  const { toast } = useToast();
+const FaceAnalysis = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isVideoRunning, setIsVideoRunning] = useState(false);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
-  const [expressionResults, setExpressionResults] = useState<{
-    dominantExpression: string;
-    expressions: Record<string, number>;
-  } | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
+  const [expressionResults, setExpressionResults] = useState<ExpressionState>({
+    dominantExpression: '',
+    expressions: {}
+  });
 
-  // Load face detection models
   useEffect(() => {
     const loadModels = async () => {
-      setIsLoading(true);
       try {
-        // Adjust this path based on where your models are stored
-        const modelPath = '/models';
-        
-        // Load required models
-        await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
-        await faceapi.nets.faceExpressionNet.loadFromUri(modelPath);
-        
+        // Load the face-api models
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+        await faceapi.nets.faceExpressionNet.loadFromUri('/models');
         setIsModelLoaded(true);
-        setIsLoading(false);
+        console.log("Face API models loaded successfully");
       } catch (error) {
-        console.error('Error loading models:', error);
+        console.error("Error loading face-api models:", error);
         toast({
-          title: "Model Loading Error",
-          description: "Failed to load facial analysis models",
+          title: "Error loading models",
+          description: "Could not load the face analysis models. Please try again later.",
           variant: "destructive",
         });
-        setIsLoading(false);
       }
     };
 
     loadModels();
-  }, [toast]);
 
-  // Handle camera start/stop
-  const handleCameraToggle = () => {
-    if (cameraActive) {
-      stopCamera();
-    } else {
-      startCamera();
-    }
-  };
+    // Clean up video on component unmount
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    };
+  }, []);
 
-  // Start camera
-  const startCamera = async () => {
+  const startVideo = async () => {
     if (!isModelLoaded) {
       toast({
-        title: "Models Not Loaded",
-        description: "Please wait for the facial analysis models to load",
+        title: "Models not loaded",
+        description: "Please wait for the face analysis models to load.",
         variant: "destructive",
       });
       return;
@@ -73,257 +70,186 @@ const FaceAnalysis = ({ onAnalysisComplete }: FaceAnalysisProps) => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "user" 
+        } 
       });
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        setIsVideoRunning(true);
+        
+        // Start face detection once video is playing
+        videoRef.current.onplay = () => {
+          detectFace();
+        };
       }
-      
-      setCameraActive(true);
     } catch (error) {
-      console.error('Error accessing camera:', error);
+      console.error("Error accessing webcam:", error);
       toast({
-        title: "Camera Error",
-        description: "Could not access your camera. Please check permissions.",
+        title: "Webcam access denied",
+        description: "Please allow access to your camera to use the face analysis feature.",
         variant: "destructive",
       });
     }
   };
 
-  // Stop camera
-  const stopCamera = () => {
+  const stopVideo = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       const tracks = stream.getTracks();
-      
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
-      
-      setCameraActive(false);
-      
-      // Clear canvas
-      if (canvasRef.current) {
-        const context = canvasRef.current.getContext('2d');
+      setIsVideoRunning(false);
+    }
+  };
+
+  const detectFace = async () => {
+    if (!videoRef.current || !canvasRef.current || !isVideoRunning) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    // Set canvas dimensions to match video
+    canvas.width = video.width;
+    canvas.height = video.height;
+
+    const displaySize = { width: video.width, height: video.height };
+    faceapi.matchDimensions(canvas, displaySize);
+
+    // Start continuous detection
+    const interval = setInterval(async () => {
+      if (!isVideoRunning) {
+        clearInterval(interval);
+        return;
+      }
+
+      try {
+        const detections = await faceapi
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceExpressions();
+
+        // Clear the canvas and draw new detections
+        const context = canvas.getContext('2d');
         if (context) {
-          context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          context.clearRect(0, 0, canvas.width, canvas.height);
         }
-      }
-    }
-  };
 
-  // Analyze facial expressions
-  const analyzeExpressions = async () => {
-    if (!videoRef.current || !canvasRef.current || !cameraActive) {
-      toast({
-        title: "Camera Not Active",
-        description: "Please start the camera before analyzing",
-        variant: "destructive",
-      });
-      return;
-    }
+        // Resize detections to match display size
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+        
+        // Draw boxes and landmarks
+        faceapi.draw.drawDetections(canvas, resizedDetections);
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
 
-    setIsAnalyzing(true);
-    
-    try {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      // Detect faces and expressions
-      const detections = await faceapi.detectAllFaces(
-        video, 
-        new faceapi.TinyFaceDetectorOptions()
-      ).withFaceExpressions();
-      
-      // Draw detections on canvas
-      const context = canvas.getContext('2d');
-      if (context) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Mirror the canvas to match selfie view
-        context.translate(canvas.width, 0);
-        context.scale(-1, 1);
-        
-        // Draw the video frame
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Restore transformation
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        
-        // Draw detections
-        faceapi.draw.drawDetections(canvas, detections);
-        faceapi.draw.drawFaceExpressions(canvas, detections);
-      }
-      
-      // Process results
-      if (detections.length > 0) {
-        const { expressions } = detections[0];
-        
-        // Find the dominant expression
-        let maxExpression = 'neutral';
-        let maxValue = 0;
-        
-        // Convert FaceExpressions to Record<string, number>
-        const expressionsRecord: Record<string, number> = {};
-        Object.keys(expressions).forEach(key => {
-          const value = expressions[key as keyof faceapi.FaceExpressions];
-          expressionsRecord[key] = value;
+        // Update expression results for the first face detected
+        if (resizedDetections.length > 0) {
+          const expressions = resizedDetections[0].expressions;
           
-          if (value > maxValue) {
-            maxExpression = key;
-            maxValue = value;
+          // Extract and sort expression results
+          const expressionArray: ExpressionResult[] = [
+            { expression: 'neutral', probability: expressions.neutral },
+            { expression: 'happy', probability: expressions.happy },
+            { expression: 'sad', probability: expressions.sad },
+            { expression: 'angry', probability: expressions.angry },
+            { expression: 'fearful', probability: expressions.fearful },
+            { expression: 'disgusted', probability: expressions.disgusted },
+            { expression: 'surprised', probability: expressions.surprised }
+          ];
+          
+          // Find dominant expression
+          let maxProbability = 0;
+          let dominantExpression = '';
+          
+          for (const item of expressionArray) {
+            if (item.probability > maxProbability) {
+              maxProbability = item.probability;
+              dominantExpression = item.expression;
+            }
           }
-        });
-        
-        // Format the results
-        const results = {
-          dominantExpression: maxExpression,
-          expressions: expressionsRecord,
-        };
-        
-        setExpressionResults(results);
-        
-        // Call the callback if provided
-        if (onAnalysisComplete) {
-          onAnalysisComplete(results);
+          
+          // Update state with expression results
+          setExpressionResults({
+            dominantExpression,
+            expressions: expressions as unknown as Record<string, number>
+          });
         }
-        
-        toast({
-          title: "Analysis Complete",
-          description: `Your dominant expression is ${maxExpression}`,
-        });
-      } else {
-        toast({
-          title: "No Face Detected",
-          description: "Please ensure your face is clearly visible to the camera",
-          variant: "destructive",
-        });
+      } catch (error) {
+        console.error("Error during face detection:", error);
       }
-    } catch (error) {
-      console.error('Error analyzing face:', error);
-      toast({
-        title: "Analysis Error",
-        description: "Failed to analyze facial expressions",
-        variant: "destructive",
-      });
-    }
-    
-    setIsAnalyzing(false);
-  };
+    }, 100); // Check every 100ms
 
-  // Format expression percentage
-  const formatPercentage = (value: number): string => {
-    return `${(value * 100).toFixed(1)}%`;
+    return () => clearInterval(interval);
   };
 
   return (
-    <Card className="bg-nexacore-blue-dark/50 border-white/10">
-      <CardHeader>
-        <CardTitle className="text-white">Emotion Analysis</CardTitle>
+    <Card className="w-full bg-nexacore-blue-dark/50 border-white/10">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-white">Face Analysis</CardTitle>
         <CardDescription className="text-white/70">
-          Analyze your facial expressions to detect emotions
+          Analyze facial expressions in real-time
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center p-12">
-            <Loader2 className="h-8 w-8 animate-spin text-nexacore-teal mb-4" />
-            <p className="text-white/70">Loading facial analysis models...</p>
-          </div>
-        ) : (
-          <>
-            <div className="relative w-full aspect-video bg-black/30 rounded-lg overflow-hidden flex items-center justify-center">
-              <video 
-                ref={videoRef}
-                className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]" 
-                autoPlay 
-                muted 
-                playsInline
-              />
-              <canvas 
-                ref={canvasRef} 
-                className="absolute inset-0 w-full h-full"
-              />
-              
-              {!cameraActive && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
-                  <Camera className="h-12 w-12 text-nexacore-teal mb-4" />
-                  <p className="text-white">Start the camera to begin emotion analysis</p>
-                </div>
-              )}
-              
-              {isAnalyzing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                  <Loader2 className="h-12 w-12 animate-spin text-nexacore-teal" />
-                </div>
+      <CardContent className="space-y-4">
+        <div className="relative aspect-video bg-black/50 rounded-md overflow-hidden">
+          <video 
+            ref={videoRef}
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            playsInline
+          />
+          <canvas 
+            ref={canvasRef}
+            className="absolute inset-0 z-10"
+          />
+          
+          {!isVideoRunning && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white z-20">
+              <p className="mb-4">Click Start to enable camera</p>
+              {!isModelLoaded && (
+                <p className="text-nexacore-teal animate-pulse">Loading models...</p>
               )}
             </div>
-            
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button
-                variant={cameraActive ? "destructive" : "default"}
-                className={!cameraActive ? "bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90" : ""}
-                onClick={handleCameraToggle}
-                disabled={isAnalyzing}
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                {cameraActive ? "Stop Camera" : "Start Camera"}
-              </Button>
-              
-              <Button
-                className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
-                onClick={analyzeExpressions}
-                disabled={!cameraActive || isAnalyzing}
-              >
-                {isAnalyzing ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</>
-                ) : (
-                  <><Smile className="mr-2 h-4 w-4" /> Analyze Emotions</>
-                )}
-              </Button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2">
+          {expressionResults.dominantExpression && (
+            <div className="col-span-2 bg-nexacore-teal/20 p-3 rounded-md">
+              <p className="text-white text-center">
+                Dominant Expression: <span className="font-bold text-nexacore-teal">{expressionResults.dominantExpression}</span>
+              </p>
             </div>
-            
-            {expressionResults && (
-              <div className="bg-white/10 p-4 rounded-lg">
-                <h3 className="text-white font-medium text-lg mb-2 flex items-center">
-                  <Smile className="mr-2 h-5 w-5 text-nexacore-teal" />
-                  Emotion Analysis Results
-                </h3>
-                <p className="text-white mb-3">
-                  Dominant emotion: <span className="font-bold text-nexacore-teal">{expressionResults.dominantExpression}</span>
-                </p>
-                <div className="space-y-2">
-                  {Object.entries(expressionResults.expressions).map(([expression, value]) => (
-                    <div key={expression} className="flex items-center justify-between">
-                      <span className="text-white/80 capitalize">{expression}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="bg-white/10 h-2 w-24 rounded-full overflow-hidden">
-                          <div 
-                            className="bg-nexacore-teal h-full rounded-full" 
-                            style={{ width: `${value * 100}%` }} 
-                          />
-                        </div>
-                        <span className="text-white/80 text-sm">{formatPercentage(value)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
+          )}
+        </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start">
-        <p className="text-white/60 text-sm">
-          Note: Your facial expression data is processed locally and not stored or sent to external servers.
-        </p>
+      <CardFooter className="flex justify-center space-x-4">
+        {!isVideoRunning ? (
+          <Button 
+            onClick={startVideo}
+            className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
+            disabled={!isModelLoaded}
+          >
+            Start Analysis
+          </Button>
+        ) : (
+          <Button 
+            onClick={stopVideo}
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            Stop Analysis
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
 };
 
 export default FaceAnalysis;
+
