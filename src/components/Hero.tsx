@@ -30,9 +30,16 @@ const Hero = () => {
       <div className="container mx-auto px-4 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         {/* Left Side: Text Content */}
         <div className="text-left animate-fade-in-up">
-          <h1 className={`text-5xl md:text-7xl font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Welcome to <span className="text-gradient">NexaCore</span>
-          </h1>
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-6">
+            <img 
+              src="/lovable-uploads/fec8cf80-99ef-4fe4-b3f9-52a5da49efc0.png" 
+              alt="Workspace with laptop" 
+              className="rounded-lg shadow-xl w-full max-w-[320px] md:max-w-[160px] mb-6 md:mb-0 transform hover:scale-105 transition-all duration-500"
+            />
+            <h1 className={`text-5xl md:text-7xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              Welcome to <span className="text-gradient">NexaCore</span>
+            </h1>
+          </div>
           <p className={`text-xl md:text-2xl mb-10 ${theme === 'dark' ? 'text-white/80' : 'text-gray-700'}`}>
             Your intelligent companion for education, health, and financial management with AI-powered insights
           </p>
@@ -44,16 +51,6 @@ const Hero = () => {
                 Get Started
               </Button>
             </Link>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className={theme === 'dark'
-                ? 'border-primary text-white hover:bg-primary/20'
-                : 'border-nexacore-teal text-nexacore-blue hover:bg-nexacore-teal/20'} 
-              onClick={scrollToFeatures}
-            >
-              Learn More
-            </Button>
           </div>
         </div>
         

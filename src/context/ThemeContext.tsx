@@ -45,25 +45,13 @@ export function ThemeProvider({
         : "light";
       root.classList.add(systemTheme);
       
-      // Also set body background for consistent theme application
-      if (systemTheme === 'dark') {
-        document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
-        document.body.style.color = 'hsl(210, 40%, 98%)';
-      } else {
-        document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
-        document.body.style.color = 'hsl(222, 47%, 11%)';
-      }
+      // Set body styles for consistent theme application
+      applyBodyStyles(systemTheme);
     } else {
       root.classList.add(theme);
       
-      // Set body background for consistent theme application
-      if (theme === 'dark') {
-        document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
-        document.body.style.color = 'hsl(210, 40%, 98%)';
-      } else {
-        document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
-        document.body.style.color = 'hsl(222, 47%, 11%)';
-      }
+      // Set body styles for consistent theme application
+      applyBodyStyles(theme);
     }
 
     // Update color meta tags for mobile browsers
@@ -78,6 +66,29 @@ export function ThemeProvider({
     }
   }, [theme]);
 
+  // Function to consistently apply body styles
+  const applyBodyStyles = (currentTheme: string) => {
+    if (currentTheme === 'dark') {
+      document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
+      document.body.style.color = 'hsl(210, 40%, 98%)';
+      
+      // Apply dark mode to specific elements
+      document.querySelectorAll('[data-theme-aware="true"]').forEach(el => {
+        (el as HTMLElement).classList.add('dark-theme');
+        (el as HTMLElement).classList.remove('light-theme');
+      });
+    } else {
+      document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
+      document.body.style.color = 'hsl(222, 47%, 11%)';
+      
+      // Apply light mode to specific elements
+      document.querySelectorAll('[data-theme-aware="true"]').forEach(el => {
+        (el as HTMLElement).classList.add('light-theme');
+        (el as HTMLElement).classList.remove('dark-theme');
+      });
+    }
+  };
+
   // Listen for changes to preferred color scheme from the system
   useEffect(() => {
     if (theme === "system") {
@@ -90,14 +101,8 @@ export function ThemeProvider({
         root.classList.remove("light", "dark");
         root.classList.add(systemTheme);
         
-        // Update body background color too
-        if (systemTheme === 'dark') {
-          document.body.style.backgroundColor = 'hsl(222, 47%, 11%)';
-          document.body.style.color = 'hsl(210, 40%, 98%)';
-        } else {
-          document.body.style.backgroundColor = 'hsl(0, 0%, 100%)';
-          document.body.style.color = 'hsl(222, 47%, 11%)';
-        }
+        // Update body styles too
+        applyBodyStyles(systemTheme);
       };
       
       mediaQuery.addEventListener("change", handleChange);

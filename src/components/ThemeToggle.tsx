@@ -3,9 +3,21 @@ import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const location = useLocation();
+  
+  // Hide toggle on index page and in dashboard settings
+  const shouldHideToggle = 
+    location.pathname === "/" || 
+    location.pathname === "/index" || 
+    location.pathname === "/settings";
+  
+  if (shouldHideToggle) {
+    return null;
+  }
   
   // Function to toggle between dark and light mode
   const toggleTheme = () => {

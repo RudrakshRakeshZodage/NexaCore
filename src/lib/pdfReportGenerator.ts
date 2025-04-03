@@ -67,14 +67,8 @@ export const generatePDFReport = async (
   doc.setFontSize(10);
 
   // Add header
-  doc.setFontSize(22);
-  doc.setTextColor(0, 126, 127); // NexaCore teal color
-  doc.text(`NexaCore ${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`, 20, 20);
+  addHeaderToReport(doc, reportType, userName);
   
-  doc.setFontSize(14);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Generated for ${userName}`, 20, 30);
-
   // Add timestamp if requested
   if (mergedOptions.includeTimestamp) {
     doc.setFontSize(10);
@@ -102,15 +96,14 @@ export const generatePDFReport = async (
       break;
   }
 
+  // Add recommendations and next steps
+  yPos = addRecommendationsToReport(doc, reportType, data, yPos);
+
+  // Add appendix with additional information
+  yPos = addAppendixToReport(doc, reportType, data, yPos);
+
   // Add footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text('NexaCore AI Insights - Confidential', 20, 285);
-    doc.text(`Page ${i} of ${pageCount}`, 180, 285);
-  }
+  addFooterToReport(doc);
 
   // Generate PDF blob
   const pdfBlob = doc.output('blob');
@@ -119,6 +112,283 @@ export const generatePDFReport = async (
   const pdfUrl = URL.createObjectURL(pdfBlob);
 
   return { blob: pdfBlob, url: pdfUrl };
+};
+
+/**
+ * Add header to the PDF report
+ */
+const addHeaderToReport = (doc: jsPDF, reportType: string, userName: string) => {
+  doc.setFontSize(22);
+  doc.setTextColor(0, 126, 127); // NexaCore teal color
+  doc.text(`NexaCore ${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`, 20, 20);
+  
+  doc.setFontSize(14);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Generated for ${userName}`, 20, 30);
+};
+
+/**
+ * Add footer to all pages of the PDF report
+ */
+const addFooterToReport = (doc: jsPDF) => {
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('NexaCore AI Insights - Confidential', 20, 285);
+    doc.text(`Page ${i} of ${pageCount}`, 180, 285);
+  }
+};
+
+/**
+ * Add recommendations and next steps to the PDF report
+ */
+const addRecommendationsToReport = (doc: jsPDF, reportType: string, data: any, startY: number) => {
+  // Add a new page for recommendations
+  doc.addPage();
+  let yPos = 20;
+  
+  // Add section title
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Recommendations & Next Steps', 20, yPos);
+  yPos += 10;
+  
+  // Add recommendations based on report type
+  doc.setFontSize(12);
+  doc.setTextColor(0, 126, 127);
+  doc.text('Personalized Recommendations', 20, yPos);
+  yPos += 7;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  
+  switch (reportType) {
+    case "education":
+      doc.text('Based on your educational data, we recommend:', 20, yPos);
+      yPos += 7;
+      
+      const eduRecommendations = [
+        "Create a structured study schedule with dedicated focus time",
+        "Join study groups or communities of practice for collaborative learning",
+        "Implement spaced repetition and active recall techniques in your study routine",
+        "Supplement formal education with online courses in your areas of interest",
+        "Seek practical applications for theoretical knowledge through projects",
+        "Consider taking breaks using the Pomodoro technique (25 min work, 5 min break)",
+        "Review and consolidate learning materials at the end of each week"
+      ];
+      
+      eduRecommendations.forEach(rec => {
+        doc.text(`• ${rec}`, 25, yPos);
+        yPos += 6;
+      });
+      break;
+      
+    case "health":
+      doc.text('Based on your health data, we recommend:', 20, yPos);
+      yPos += 7;
+      
+      const healthRecommendations = [
+        "Aim for 7-9 hours of quality sleep each night",
+        "Maintain a balanced diet rich in vegetables, lean proteins, and whole grains",
+        "Stay hydrated by drinking at least 8 glasses of water daily",
+        "Practice daily mindfulness or meditation for 10-15 minutes",
+        "Take regular breaks during work to reduce eye strain and mental fatigue",
+        "Consider integrating strength training 2-3 times per week",
+        "Schedule regular health check-ups and preventive screenings"
+      ];
+      
+      healthRecommendations.forEach(rec => {
+        doc.text(`• ${rec}`, 25, yPos);
+        yPos += 6;
+      });
+      break;
+      
+    case "finance":
+      doc.text('Based on your financial data, we recommend:', 20, yPos);
+      yPos += 7;
+      
+      const financeRecommendations = [
+        "Create a budget using the 50/30/20 rule (needs/wants/savings)",
+        "Build an emergency fund covering 3-6 months of expenses",
+        "Review and optimize recurring expenses quarterly",
+        "Consider automated transfers to savings accounts on payday",
+        "Diversify investments based on your risk tolerance and time horizon",
+        "Negotiate bills and evaluate subscriptions annually",
+        "Set specific, measurable financial goals with deadlines"
+      ];
+      
+      financeRecommendations.forEach(rec => {
+        doc.text(`• ${rec}`, 25, yPos);
+        yPos += 6;
+      });
+      break;
+      
+    case "comprehensive":
+      doc.text('Based on your comprehensive data, we recommend:', 20, yPos);
+      yPos += 7;
+      
+      const comprehensiveRecommendations = [
+        "Establish a holistic daily routine that balances work, rest, and personal development",
+        "Integrate your educational goals with career planning",
+        "Consider how improvements in health might positively impact productivity",
+        "Create a financial plan that supports your educational and health goals",
+        "Practice self-compassion as you work toward integrated personal growth",
+        "Schedule regular reviews to track progress across all domains",
+        "Find synergies between different areas of your life for maximum impact"
+      ];
+      
+      comprehensiveRecommendations.forEach(rec => {
+        doc.text(`• ${rec}`, 25, yPos);
+        yPos += 6;
+      });
+      break;
+  }
+  
+  yPos += 5;
+  
+  // Add next steps section
+  doc.setFontSize(12);
+  doc.setTextColor(0, 126, 127);
+  doc.text('Next Steps', 20, yPos);
+  yPos += 7;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  
+  const nextSteps = [
+    "Review the detailed analysis in this report",
+    "Identify 2-3 key recommendations to implement immediately",
+    "Set reminders to check in on your progress weekly",
+    "Schedule a follow-up analysis in 30 days to track improvements",
+    "Share relevant insights with your support network"
+  ];
+  
+  nextSteps.forEach(step => {
+    doc.text(`• ${step}`, 25, yPos);
+    yPos += 6;
+  });
+  
+  return yPos;
+};
+
+/**
+ * Add appendix with additional information to the PDF report
+ */
+const addAppendixToReport = (doc: jsPDF, reportType: string, data: any, startY: number) => {
+  // Add a new page for the appendix
+  doc.addPage();
+  let yPos = 20;
+  
+  // Add section title
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Appendix: Additional Resources', 20, yPos);
+  yPos += 10;
+  
+  // Add resources based on report type
+  doc.setFontSize(12);
+  doc.setTextColor(0, 126, 127);
+  doc.text('Suggested Resources', 20, yPos);
+  yPos += 7;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  
+  switch (reportType) {
+    case "education":
+      const eduResources = [
+        { title: "Learning How to Learn", author: "Barbara Oakley", description: "A course on effective learning techniques" },
+        { title: "Deep Work", author: "Cal Newport", description: "Strategies for focused productivity" },
+        { title: "Khan Academy", author: "", description: "Free online courses on various subjects" },
+        { title: "Anki", author: "", description: "Spaced repetition flashcard software" },
+        { title: "Coursera", author: "", description: "Platform for online courses from top universities" }
+      ];
+      
+      eduResources.forEach(resource => {
+        doc.text(`• ${resource.title}${resource.author ? ` by ${resource.author}` : ""}`, 25, yPos);
+        yPos += 5;
+        doc.text(`  ${resource.description}`, 25, yPos);
+        yPos += 7;
+      });
+      break;
+      
+    case "health":
+      const healthResources = [
+        { title: "Headspace", author: "", description: "Guided meditation and mindfulness app" },
+        { title: "MyFitnessPal", author: "", description: "Nutrition tracking and meal planning" },
+        { title: "Sleep Foundation", author: "", description: "Research-based sleep improvement resources" },
+        { title: "Why We Sleep", author: "Matthew Walker", description: "Book on sleep science and improvement" },
+        { title: "Fitness Blender", author: "", description: "Free workout videos for all fitness levels" }
+      ];
+      
+      healthResources.forEach(resource => {
+        doc.text(`• ${resource.title}${resource.author ? ` by ${resource.author}` : ""}`, 25, yPos);
+        yPos += 5;
+        doc.text(`  ${resource.description}`, 25, yPos);
+        yPos += 7;
+      });
+      break;
+      
+    case "finance":
+      const financeResources = [
+        { title: "YNAB (You Need A Budget)", author: "", description: "Budgeting software and methodology" },
+        { title: "The Simple Path to Wealth", author: "J.L. Collins", description: "Book on straightforward investing" },
+        { title: "Mint", author: "", description: "Free financial tracking and budgeting tool" },
+        { title: "NerdWallet", author: "", description: "Financial product comparisons and advice" },
+        { title: "Bogleheads' Guide to Investing", author: "Taylor Larimore", description: "Book on index fund investing" }
+      ];
+      
+      financeResources.forEach(resource => {
+        doc.text(`• ${resource.title}${resource.author ? ` by ${resource.author}` : ""}`, 25, yPos);
+        yPos += 5;
+        doc.text(`  ${resource.description}`, 25, yPos);
+        yPos += 7;
+      });
+      break;
+      
+    case "comprehensive":
+      const comprehensiveResources = [
+        { title: "Atomic Habits", author: "James Clear", description: "Book on building effective habits" },
+        { title: "Notion", author: "", description: "All-in-one workspace for notes, tasks, and planning" },
+        { title: "The NexaCore Blog", author: "", description: "Articles on integrated personal development" },
+        { title: "Todoist", author: "", description: "Task management app for productivity" },
+        { title: "The 7 Habits of Highly Effective People", author: "Stephen Covey", description: "Classic book on personal effectiveness" }
+      ];
+      
+      comprehensiveResources.forEach(resource => {
+        doc.text(`• ${resource.title}${resource.author ? ` by ${resource.author}` : ""}`, 25, yPos);
+        yPos += 5;
+        doc.text(`  ${resource.description}`, 25, yPos);
+        yPos += 7;
+      });
+      break;
+  }
+  
+  // Add methodology section
+  yPos += 5;
+  doc.setFontSize(12);
+  doc.setTextColor(0, 126, 127);
+  doc.text('Methodology', 20, yPos);
+  yPos += 7;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text('This report was generated using NexaCore\'s proprietary AI analysis algorithms, which process user', 20, yPos);
+  yPos += 5;
+  doc.text('data to provide personalized insights and recommendations. The analysis is based on established', 20, yPos);
+  yPos += 5;
+  doc.text('research in cognitive science, behavioral psychology, and data analytics.', 20, yPos);
+  yPos += 10;
+  
+  doc.text('Note: This report is provided for informational purposes only and should not be considered as', 20, yPos);
+  yPos += 5;
+  doc.text('professional advice. Please consult with qualified professionals for specific guidance related to', 20, yPos);
+  yPos += 5;
+  doc.text('your education, health, or financial situations.', 20, yPos);
+  
+  return yPos;
 };
 
 /**
@@ -195,6 +465,65 @@ const addEducationContent = (doc: jsPDF, educationData: any, startY: number) => 
     yPos += 5;
   }
 
+  // Learning style if available
+  if (educationData.learningStyle) {
+    doc.setFontSize(12);
+    doc.setTextColor(0, 126, 127);
+    doc.text('Learning Style Analysis', 20, yPos);
+    yPos += 7;
+
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Your primary learning style: ${educationData.learningStyle}`, 25, yPos);
+    yPos += 5;
+    
+    // Add learning style explanations
+    const learningStyleInfo = {
+      visual: "You learn best through visual aids like charts, graphs, and images.",
+      auditory: "You learn best by listening to information and verbal instructions.",
+      reading: "You learn best by reading and writing information.",
+      kinesthetic: "You learn best through hands-on experiences and physical activities."
+    };
+    
+    if (educationData.learningStyle && learningStyleInfo[educationData.learningStyle.toLowerCase()]) {
+      doc.text(learningStyleInfo[educationData.learningStyle.toLowerCase()], 25, yPos);
+      yPos += 5;
+    }
+    
+    yPos += 5;
+  }
+
+  // Skills assessment if available
+  if (educationData.skills && (Array.isArray(educationData.skills) || typeof educationData.skills === 'object')) {
+    doc.setFontSize(12);
+    doc.setTextColor(0, 126, 127);
+    doc.text('Skills Assessment', 20, yPos);
+    yPos += 7;
+
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    
+    if (Array.isArray(educationData.skills)) {
+      doc.text('Your current skills:', 25, yPos);
+      yPos += 5;
+      
+      educationData.skills.forEach((skill: string, index: number) => {
+        doc.text(`• ${skill}`, 30, yPos);
+        yPos += 5;
+      });
+    } else if (typeof educationData.skills === 'object') {
+      doc.text('Your skills proficiency:', 25, yPos);
+      yPos += 5;
+      
+      Object.entries(educationData.skills).forEach(([skill, level]: [string, any]) => {
+        doc.text(`• ${skill}: ${level}`, 30, yPos);
+        yPos += 5;
+      });
+    }
+    
+    yPos += 5;
+  }
+
   return yPos;
 };
 
@@ -232,11 +561,6 @@ const addHealthContent = (doc: jsPDF, healthData: any, faceAnalysis: FaceAnalysi
   
   if (healthData.weight) {
     doc.text(`Weight: ${healthData.weight} kg`, 25, yPos);
-    yPos += 5;
-  }
-  
-  if (healthData.age) {
-    doc.text(`Age: ${healthData.age} years`, 25, yPos);
     yPos += 5;
   }
   
@@ -386,6 +710,44 @@ const addFinanceContent = (doc: jsPDF, financeData: any, startY: number) => {
     yPos += 5;
   }
 
+  // Financial health score if available
+  if (financeData.healthScore) {
+    doc.setFontSize(12);
+    doc.setTextColor(0, 126, 127);
+    doc.text('Financial Health Score', 20, yPos);
+    yPos += 7;
+
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    
+    const score = typeof financeData.healthScore === 'number' 
+      ? financeData.healthScore 
+      : parseFloat(financeData.healthScore);
+    
+    const scoreText = isNaN(score) ? financeData.healthScore : `${score}/100`;
+    doc.text(`Your Financial Health Score: ${scoreText}`, 25, yPos);
+    yPos += 5;
+    
+    // Add interpretation based on score
+    if (!isNaN(score)) {
+      let interpretation = '';
+      if (score >= 80) {
+        interpretation = 'Excellent financial health. Continue maintaining your good habits.';
+      } else if (score >= 60) {
+        interpretation = 'Good financial health. Small improvements could further strengthen your position.';
+      } else if (score >= 40) {
+        interpretation = 'Moderate financial health. Focus on building emergency savings and reducing debt.';
+      } else {
+        interpretation = 'Financial health needs attention. Consider developing a strict budget and debt reduction plan.';
+      }
+      
+      doc.text(`Interpretation: ${interpretation}`, 25, yPos);
+      yPos += 5;
+    }
+    
+    yPos += 5;
+  }
+
   return yPos;
 };
 
@@ -408,9 +770,35 @@ const addComprehensiveContent = (doc: jsPDF, allData: any, startY: number) => {
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
   doc.text('This comprehensive report provides an integrated view of your education, health, and financial data.', 25, yPos);
+  yPos += 5;
+  doc.text('The following pages contain detailed analyses for each domain along with personalized recommendations.', 25, yPos);
   yPos += 10;
 
-  // Add sections from each domain
+  // Integration insights
+  doc.setFontSize(12);
+  doc.setTextColor(0, 126, 127);
+  doc.text('Holistic Insights', 20, yPos);
+  yPos += 7;
+
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  
+  const insights = [
+    "Your educational goals can be supported by maintaining good health habits",
+    "Financial planning should align with your educational investments and health needs",
+    "Stress management is important across all domains for optimal performance",
+    "Building consistent habits can create positive momentum across all areas of life",
+    "Regular review and adjustment of your strategies leads to continuous improvement"
+  ];
+  
+  insights.forEach(insight => {
+    doc.text(`• ${insight}`, 25, yPos);
+    yPos += 6;
+  });
+  
+  yPos += 5;
+
+  // Add sections from each domain on separate pages
   if (allData.education && Object.keys(allData.education).length > 0) {
     doc.addPage();
     yPos = 20;

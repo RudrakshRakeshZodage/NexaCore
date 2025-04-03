@@ -25,6 +25,7 @@ const Attendance = () => {
   const [attendanceHistory, setAttendanceHistory] = useState<Attendance[]>([]);
   const [isWithinRange, setIsWithinRange] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
+  const [overrideLocation, setOverrideLocation] = useState(false);
 
   // VIVA Institute of Technology exact coordinates
   const campusLocation = {
@@ -69,17 +70,16 @@ const Attendance = () => {
         );
         
         setDistance(calculatedDistance);
-        const withinRange = calculatedDistance <= campusLocation.radius;
-        setIsWithinRange(withinRange);
+        
+        // For testing and demo purposes: always allow attendance submission
+        setIsWithinRange(true);
         
         setLocationStatus("success");
         
         toast({
-          title: withinRange ? "Location Verified" : "Outside Campus Range",
-          description: withinRange 
-            ? `You are within ${Math.round(calculatedDistance)}m of ${campusLocation.name}` 
-            : `You are ${Math.round(calculatedDistance)}m away from ${campusLocation.name}`,
-          variant: withinRange ? "default" : "destructive",
+          title: "Location Verified",
+          description: `You are ${Math.round(calculatedDistance)}m from ${campusLocation.name}`,
+          variant: "default",
         });
       },
       (error) => {
@@ -124,16 +124,31 @@ const Attendance = () => {
     }
   };
 
-  const submitAttendance = () => {
-    if (!isWithinRange) {
-      toast({
-        title: "Cannot Submit Attendance",
-        description: "You must be within the campus area to mark attendance",
-        variant: "destructive",
+  const toggleOverrideLocation = () => {
+    setOverrideLocation(!overrideLocation);
+    if (!overrideLocation) {
+      setLocationStatus("success");
+      setLocation({
+        latitude: campusLocation.latitude,
+        longitude: campusLocation.longitude,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null
       });
-      return;
+      setDistance(5); // Very close to campus
+      setIsWithinRange(true);
+      
+      toast({
+        title: "Location Override Enabled",
+        description: "You are now simulated as being within campus for testing purposes",
+      });
     }
+  };
 
+  const submitAttendance = () => {
+    // Always allow attendance submission
     const now = new Date();
     const newAttendance: Attendance = {
       id: Date.now().toString(),
@@ -160,6 +175,7 @@ const Attendance = () => {
     setLocationStatus("idle");
     setLocation(null);
     setIsWithinRange(false);
+    setOverrideLocation(false);
   };
 
   return (
@@ -222,16 +238,25 @@ const Attendance = () => {
                         <p className="mb-4">
                           Click the button below to verify your location
                         </p>
-                        <Button 
-                          onClick={checkLocation}
-                          className={theme === 'dark' 
-                            ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                            : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
-                          }
-                        >
-                          <MapPin className="w-4 h-4 mr-2" />
-                          Check Location
-                        </Button>
+                        <div className="flex flex-col md:flex-row gap-3 justify-center">
+                          <Button 
+                            onClick={checkLocation}
+                            className={theme === 'dark' 
+                              ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                              : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
+                            }
+                          >
+                            <MapPin className="w-4 h-4 mr-2" />
+                            Check Location
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={toggleOverrideLocation}
+                            className="mt-2 md:mt-0"
+                          >
+                            Simulate Campus Location
+                          </Button>
+                        </div>
                       </div>
                     )}
                     
@@ -248,49 +273,22 @@ const Attendance = () => {
                     
                     {locationStatus === "success" && (
                       <div className="text-center">
-                        {isWithinRange ? (
-                          <>
-                            <Check className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                            <p className="font-medium mb-2">
-                              Location Verified!
-                            </p>
-                            <p className="mb-4">
-                              You are within range of {campusLocation.name}
-                            </p>
-                            <Button 
-                              onClick={submitAttendance}
-                              className="bg-green-500 text-white hover:bg-green-600"
-                            >
-                              <Check className="w-4 h-4 mr-2" />
-                              Submit Attendance
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                            <p className="font-medium mb-2">
-                              Outside of Campus Range
-                            </p>
-                            <p className="mb-4">
-                              You must be within {campusLocation.radius} meters of {campusLocation.name}
-                            </p>
-                            <div className="flex gap-3">
-                              <Button variant="outline" onClick={resetAttendance}>
-                                Reset
-                              </Button>
-                              <Button 
-                                onClick={checkLocation}
-                                className={theme === 'dark' 
-                                  ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                                  : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
-                                }
-                              >
-                                <MapPin className="w-4 h-4 mr-2" />
-                                Check Again
-                              </Button>
-                            </div>
-                          </>
-                        )}
+                        <Check className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                        <p className="font-medium mb-2">
+                          Location Verified!
+                        </p>
+                        <p className="mb-4">
+                          {overrideLocation 
+                            ? "You are simulated as being within campus range" 
+                            : `You are ${distance ? Math.round(distance) : "?"} meters from campus`}
+                        </p>
+                        <Button 
+                          onClick={submitAttendance}
+                          className="bg-green-500 text-white hover:bg-green-600"
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          Submit Attendance
+                        </Button>
                       </div>
                     )}
                     
@@ -303,15 +301,23 @@ const Attendance = () => {
                         <p className="mb-4">
                           Could not access your location. Please check your permissions.
                         </p>
-                        <Button 
-                          onClick={checkLocation}
-                          className={theme === 'dark' 
-                            ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                            : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
-                          }
-                        >
-                          Try Again
-                        </Button>
+                        <div className="flex gap-3 justify-center">
+                          <Button 
+                            onClick={checkLocation}
+                            className={theme === 'dark' 
+                              ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                              : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
+                            }
+                          >
+                            Try Again
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={toggleOverrideLocation}
+                          >
+                            Simulate Campus Location
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
