@@ -1,104 +1,84 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/AuthContext";
-import { Mail, ArrowLeft } from "lucide-react";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useFirebase } from '../context/FirebaseContext';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const { forgotPassword } = useAuth();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const { resetPassword } = useFirebase();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      setIsLoading(true);
-      await forgotPassword(email);
-      setIsSubmitted(true);
-    } catch (error) {
-      console.error("Password reset request failed:", error);
+      await resetPassword(email);
+      setSent(true);
+      toast({
+        title: "Reset email sent",
+        description: "Check your inbox for password reset instructions",
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        title: "Reset failed",
+        description: error.message || "There was an error sending the reset email",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-nexacore-blue-dark flex items-center justify-center p-4">
-      <div className="glass-card max-w-md w-full p-8">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-gradient">NexaCore</h1>
-          </Link>
-          <h2 className="text-xl font-semibold mt-4 text-white">Reset Password</h2>
-          <p className="text-white/70 mt-2">
-            Enter your email and we'll send you instructions to reset your password
-          </p>
-        </div>
-
-        {isSubmitted ? (
-          <div className="text-center">
-            <div className="h-16 w-16 rounded-full bg-nexacore-teal/20 flex items-center justify-center mx-auto mb-4">
-              <Mail className="text-nexacore-teal" size={28} />
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Reset Password</CardTitle>
+          <CardDescription className="text-center">
+            Enter your email to receive a password reset link
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {sent ? (
+            <div className="text-center space-y-4">
+              <p className="text-green-600">Reset email sent to {email}</p>
+              <p>Please check your inbox for instructions to reset your password.</p>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Check Your Email</h3>
-            <p className="text-white/70 mb-6">
-              We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and follow the instructions.
-            </p>
-            <Link to="/login">
-              <Button className="w-full bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light">
-                Back to Login
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-white">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">Email</label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
-                  className="pl-10 bg-white/10 border-white/20 text-white"
+                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal-light"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-nexacore-blue-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Sending...
-                </div>
-              ) : (
-                "Send Reset Link"
-              )}
-            </Button>
-          </form>
-        )}
-
-        <div className="text-center mt-6">
-          <Link to="/login" className="text-nexacore-teal hover:underline inline-flex items-center">
-            <ArrowLeft size={16} className="mr-1" />
-            Back to Login
-          </Link>
-        </div>
-      </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </form>
+          )}
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-sm text-center">
+            <Link to="/login" className="text-blue-600 hover:underline">
+              Return to login
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
