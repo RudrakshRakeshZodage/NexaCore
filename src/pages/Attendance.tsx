@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Clock, Check, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/context/ThemeContext";
 
 interface Attendance {
   id: string;
@@ -17,6 +18,7 @@ interface Attendance {
 
 const Attendance = () => {
   const { toast } = useToast();
+  const { theme } = useTheme();
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [locationStatus, setLocationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [attendanceSubmitted, setAttendanceSubmitted] = useState(false);
@@ -31,7 +33,7 @@ const Attendance = () => {
     radius: 300, // meters
   };
 
-  // Get user's location when component mounts
+  // Get attendance history when component mounts
   useEffect(() => {
     const storedAttendance = localStorage.getItem("attendance_history");
     if (storedAttendance) {
@@ -162,48 +164,63 @@ const Attendance = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Attendance</h1>
-          <p className="text-muted-foreground">Mark your attendance using GPS location verification.</p>
+          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            Mark your attendance using GPS location verification.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="bg-nexacore-blue-dark/50 border-white/10 dark:bg-foreground/5 col-span-1 lg:col-span-2">
+          <Card className={`col-span-1 lg:col-span-2 hover-lift transition-all duration-300 ${
+            theme === 'dark' 
+              ? 'bg-gray-800/50 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
             <CardHeader>
-              <CardTitle className="text-white dark:text-foreground flex items-center gap-2">
-                <MapPin className="text-nexacore-teal dark:text-primary" size={20} />
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className={theme === 'dark' ? 'text-primary' : 'text-nexacore-teal'} size={20} />
                 Location Verification
               </CardTitle>
-              <CardDescription className="text-white/70 dark:text-muted-foreground">
+              <CardDescription>
                 Use your device's GPS to verify your location for attendance
               </CardDescription>
             </CardHeader>
             
             <CardContent className="space-y-4">
-              <div className="bg-white/10 dark:bg-foreground/10 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-white dark:text-foreground mb-2">Campus Information</h3>
+              <div className={`rounded-lg p-4 ${
+                theme === 'dark' ? 'bg-gray-700/30' : 'bg-gray-50'
+              }`}>
+                <h3 className="text-lg font-medium mb-2">Campus Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-white/70 dark:text-muted-foreground">Name:</p>
-                    <p className="text-white dark:text-foreground font-medium">{campusLocation.name}</p>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Name:</p>
+                    <p className="font-medium">{campusLocation.name}</p>
                   </div>
                   <div>
-                    <p className="text-white/70 dark:text-muted-foreground">Attendance Radius:</p>
-                    <p className="text-white dark:text-foreground font-medium">{campusLocation.radius} meters</p>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Attendance Radius:</p>
+                    <p className="font-medium">{campusLocation.radius} meters</p>
                   </div>
                 </div>
               </div>
               
               {!attendanceSubmitted ? (
                 <div className="space-y-4">
-                  <div className="flex flex-col items-center justify-center p-6 border border-dashed border-white/20 dark:border-border rounded-lg">
+                  <div className={`flex flex-col items-center justify-center p-6 border border-dashed rounded-lg ${
+                    theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                  }`}>
                     {locationStatus === "idle" && (
                       <div className="text-center">
-                        <MapPin className="w-12 h-12 text-nexacore-teal/50 dark:text-primary/50 mx-auto mb-4" />
-                        <p className="text-white/80 dark:text-foreground/80 mb-4">
+                        <MapPin className={`w-12 h-12 mx-auto mb-4 ${
+                          theme === 'dark' ? 'text-primary/50' : 'text-nexacore-teal/50'
+                        }`} />
+                        <p className="mb-4">
                           Click the button below to verify your location
                         </p>
                         <Button 
                           onClick={checkLocation}
-                          className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+                          className={theme === 'dark' 
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                            : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
+                          }
                         >
                           <MapPin className="w-4 h-4 mr-2" />
                           Check Location
@@ -213,10 +230,12 @@ const Attendance = () => {
                     
                     {locationStatus === "loading" && (
                       <div className="text-center">
-                        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-nexacore-teal dark:text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                        <div className={`inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] ${
+                          theme === 'dark' ? 'text-primary' : 'text-nexacore-teal'
+                        } motion-reduce:animate-[spin_1.5s_linear_infinite]`} role="status">
                           <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
                         </div>
-                        <p className="text-white/80 dark:text-foreground/80 mt-4">Getting your location...</p>
+                        <p className="mt-4">Getting your location...</p>
                       </div>
                     )}
                     
@@ -225,10 +244,10 @@ const Attendance = () => {
                         {isWithinRange ? (
                           <>
                             <Check className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                            <p className="text-white dark:text-foreground font-medium mb-2">
+                            <p className="font-medium mb-2">
                               Location Verified!
                             </p>
-                            <p className="text-white/80 dark:text-foreground/80 mb-4">
+                            <p className="mb-4">
                               You are within range of {campusLocation.name}
                             </p>
                             <Button 
@@ -242,10 +261,10 @@ const Attendance = () => {
                         ) : (
                           <>
                             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                            <p className="text-white dark:text-foreground font-medium mb-2">
+                            <p className="font-medium mb-2">
                               Outside of Campus Range
                             </p>
-                            <p className="text-white/80 dark:text-foreground/80 mb-4">
+                            <p className="mb-4">
                               You must be within {campusLocation.radius} meters of {campusLocation.name}
                             </p>
                             <div className="flex gap-3">
@@ -254,7 +273,10 @@ const Attendance = () => {
                               </Button>
                               <Button 
                                 onClick={checkLocation}
-                                className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+                                className={theme === 'dark' 
+                                  ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                                  : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
+                                }
                               >
                                 <MapPin className="w-4 h-4 mr-2" />
                                 Check Again
@@ -268,15 +290,18 @@ const Attendance = () => {
                     {locationStatus === "error" && (
                       <div className="text-center">
                         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                        <p className="text-white dark:text-foreground font-medium mb-2">
+                        <p className="font-medium mb-2">
                           Location Error
                         </p>
-                        <p className="text-white/80 dark:text-foreground/80 mb-4">
+                        <p className="mb-4">
                           Could not access your location. Please check your permissions.
                         </p>
                         <Button 
                           onClick={checkLocation}
-                          className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+                          className={theme === 'dark' 
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                            : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'
+                          }
                         >
                           Try Again
                         </Button>
@@ -285,31 +310,36 @@ const Attendance = () => {
                   </div>
                   
                   {location && (
-                    <div className="bg-white/10 dark:bg-foreground/10 rounded-lg p-4">
-                      <h3 className="text-lg font-medium text-white dark:text-foreground mb-2">Your Location</h3>
+                    <div className={`rounded-lg p-4 ${
+                      theme === 'dark' ? 'bg-gray-700/30' : 'bg-gray-50'
+                    }`}>
+                      <h3 className="text-lg font-medium mb-2">Your Location</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <p className="text-white/70 dark:text-muted-foreground">Latitude:</p>
-                          <p className="text-white font-mono dark:text-foreground">{location.latitude.toFixed(6)}</p>
+                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Latitude:</p>
+                          <p className="font-mono">{location.latitude.toFixed(6)}</p>
                         </div>
                         <div>
-                          <p className="text-white/70 dark:text-muted-foreground">Longitude:</p>
-                          <p className="text-white font-mono dark:text-foreground">{location.longitude.toFixed(6)}</p>
+                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>Longitude:</p>
+                          <p className="font-mono">{location.longitude.toFixed(6)}</p>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center p-6 border border-dashed border-green-500/30 rounded-lg bg-green-500/10">
+                <div className="text-center p-6 border border-dashed rounded-lg border-green-500/30 bg-green-500/10">
                   <Check className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-white dark:text-foreground mb-2">Attendance Submitted!</h3>
-                  <p className="text-white/80 dark:text-foreground/80 mb-4">
+                  <h3 className="text-xl font-medium mb-2">Attendance Submitted!</h3>
+                  <p className="mb-4">
                     Your attendance has been successfully recorded for today.
                   </p>
                   <Button 
                     variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10 dark:border-foreground/20 dark:text-foreground dark:hover:bg-foreground/10"
+                    className={theme === 'dark' 
+                      ? 'border-gray-700 hover:bg-gray-800' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                    }
                     onClick={resetAttendance}
                   >
                     Mark Another Attendance
@@ -319,19 +349,23 @@ const Attendance = () => {
             </CardContent>
             
             <CardFooter>
-              <p className="text-xs text-white/50 dark:text-muted-foreground">
+              <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
                 Your location data is used only for attendance verification and is not stored or shared.
               </p>
             </CardFooter>
           </Card>
           
-          <Card className="bg-nexacore-blue-dark/50 border-white/10 dark:bg-foreground/5">
+          <Card className={`hover-lift transition-all duration-300 ${
+            theme === 'dark' 
+              ? 'bg-gray-800/50 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
             <CardHeader>
-              <CardTitle className="text-white dark:text-foreground flex items-center gap-2">
-                <Clock className="text-nexacore-teal dark:text-primary" size={20} />
+              <CardTitle className="flex items-center gap-2">
+                <Clock className={theme === 'dark' ? 'text-primary' : 'text-nexacore-teal'} size={20} />
                 Attendance History
               </CardTitle>
-              <CardDescription className="text-white/70 dark:text-muted-foreground">
+              <CardDescription>
                 Your recent attendance records
               </CardDescription>
             </CardHeader>
@@ -342,11 +376,15 @@ const Attendance = () => {
                   {attendanceHistory.slice().reverse().slice(0, 5).map((record) => (
                     <div 
                       key={record.id} 
-                      className="flex items-center justify-between p-3 bg-white/10 dark:bg-foreground/10 rounded-lg"
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        theme === 'dark' ? 'bg-gray-700/30' : 'bg-gray-50'
+                      }`}
                     >
                       <div>
-                        <p className="text-white font-medium dark:text-foreground">{record.date}</p>
-                        <p className="text-white/70 text-sm dark:text-muted-foreground">{record.time}</p>
+                        <p className="font-medium">{record.date}</p>
+                        <p className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>{record.time}</p>
                       </div>
                       <Badge
                         className={
@@ -363,9 +401,13 @@ const Attendance = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 border border-dashed border-white/20 dark:border-foreground/20 rounded-lg">
-                  <Clock className="w-10 h-10 text-white/30 dark:text-foreground/30 mx-auto mb-3" />
-                  <p className="text-white/60 dark:text-foreground/60">No attendance records yet</p>
+                <div className={`text-center py-8 border border-dashed rounded-lg ${
+                  theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                }`}>
+                  <Clock className={`w-10 h-10 mx-auto mb-3 ${
+                    theme === 'dark' ? 'text-gray-600' : 'text-gray-300'
+                  }`} />
+                  <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>No attendance records yet</p>
                 </div>
               )}
             </CardContent>

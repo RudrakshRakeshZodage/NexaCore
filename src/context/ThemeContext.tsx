@@ -34,8 +34,10 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
     
+    // Remove existing theme classes first
     root.classList.remove("light", "dark");
     
+    // Apply the appropriate theme class
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
@@ -43,6 +45,35 @@ export function ThemeProvider({
       root.classList.add(systemTheme);
     } else {
       root.classList.add(theme);
+    }
+
+    // Update color meta tags for mobile browsers
+    const metaThemeColor = document.querySelector("meta[name=theme-color]");
+    if (!metaThemeColor) {
+      const meta = document.createElement("meta");
+      meta.name = "theme-color";
+      meta.content = theme === "dark" ? "#10151c" : "#ffffff";
+      document.head.appendChild(meta);
+    } else {
+      metaThemeColor.setAttribute("content", theme === "dark" ? "#10151c" : "#ffffff");
+    }
+  }, [theme]);
+
+  // Listen for changes to preferred color scheme from the system
+  useEffect(() => {
+    if (theme === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      
+      const handleChange = () => {
+        const root = window.document.documentElement;
+        const systemTheme = mediaQuery.matches ? "dark" : "light";
+        
+        root.classList.remove("light", "dark");
+        root.classList.add(systemTheme);
+      };
+      
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
     }
   }, [theme]);
 

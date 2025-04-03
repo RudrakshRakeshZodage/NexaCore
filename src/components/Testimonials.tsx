@@ -3,40 +3,50 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Quote } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 const testimonials = [
   {
     id: 1,
     name: "Rudraksh Zodage",
     role: "Product Designer",
-    content: "NexaCore has revolutionized how I manage my personal development. The AI recommendations are incredibly accurate.",
+    company: "DesignCore Studios",
+    image: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80",
+    content: "NexaCore has revolutionized how I manage my personal development. The AI recommendations are incredibly accurate, and the facial analysis feature provides insights I never expected.",
     rating: 5,
   },
   {
     id: 2,
     name: "Adarsh Mishra",
     role: "Software Engineer",
-    content: "The all-in-one approach of NexaCore for education, health, and finance is exactly what I needed to stay organized.",
+    company: "TechSprint Inc.",
+    image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80",
+    content: "The all-in-one approach of NexaCore for education, health, and finance is exactly what I needed to stay organized. The attendance tracking feature has been a game-changer for my classes.",
     rating: 5,
   },
   {
     id: 3,
     name: "Atharva Bari",
     role: "Data Scientist",
-    content: "I've tried many personal development apps, but NexaCore's AI insights are unmatched. It's transformed my daily routine.",
+    company: "AnalyticsFusion",
+    image: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?auto=format&fit=crop&q=80",
+    content: "I've tried many personal development apps, but NexaCore's AI insights are unmatched. It's transformed my daily routine and helped me achieve a much better work-life balance.",
     rating: 4,
   },
   {
     id: 4,
     name: "Hemangi Tandel",
     role: "Healthcare Professional",
-    content: "The health metrics and face analysis features are surprisingly accurate. I use them daily to track my wellness.",
+    company: "Wellness Partners",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80",
+    content: "The health metrics and face analysis features are surprisingly accurate. I use them daily to track my wellness and recommend NexaCore to all my colleagues and patients.",
     rating: 5,
   },
 ];
 
 const Testimonials = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { theme } = useTheme();
 
   const handleNext = () => {
     setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
@@ -53,7 +63,7 @@ const Testimonials = () => {
         <svg
           key={i}
           className={`w-4 h-4 ${
-            i < rating ? "text-nexacore-teal dark:text-primary" : "text-white/20 dark:text-muted-foreground"
+            i < rating ? "text-nexacore-teal dark:text-primary" : "text-gray-300 dark:text-gray-600"
           }`}
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
@@ -66,14 +76,26 @@ const Testimonials = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-t from-nexacore-blue-dark/90 to-nexacore-blue-dark dark:from-background dark:to-background">
+    <section className={`py-20 ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-t from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-t from-white to-gray-50'
+    }`}>
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16 reveal-animation">
-          <Badge className="mb-4 bg-nexacore-teal/20 text-nexacore-teal dark:bg-primary/20 dark:text-primary">Testimonials</Badge>
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white dark:text-foreground">
+        <div className="text-center mb-16 animation-trigger">
+          <Badge className={`mb-4 ${
+            theme === 'dark' 
+              ? 'bg-primary/20 text-primary' 
+              : 'bg-nexacore-teal/20 text-nexacore-teal'
+          }`}>Testimonials</Badge>
+          <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>
             What Our <span className="text-gradient">Users Say</span>
           </h2>
-          <p className="text-white/70 dark:text-muted-foreground max-w-3xl mx-auto">
+          <p className={`max-w-3xl mx-auto ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             Hear from our users about how NexaCore has helped them achieve their goals and improve their lives.
           </p>
         </div>
@@ -87,24 +109,40 @@ const Testimonials = () => {
               >
                 {testimonials.map((testimonial) => (
                   <div key={testimonial.id} className="min-w-full p-4">
-                    <Card className="bg-white/5 backdrop-blur-lg border-white/10 hover:bg-white/10 transition-all duration-300 dark:bg-foreground/5 dark:border-border dark:hover:bg-foreground/10">
+                    <Card className={`hover-lift transition-all duration-300 ${
+                      theme === 'dark'
+                        ? 'bg-gray-800/50 border-gray-700'
+                        : 'bg-white/90 border-gray-200'
+                    }`}>
                       <CardContent className="p-6 md:p-8">
                         <div className="flex items-center mb-4">
-                          <div className="h-12 w-12 bg-nexacore-teal/20 dark:bg-primary/20 rounded-full flex items-center justify-center mr-4">
-                            <User className="text-nexacore-teal dark:text-primary" />
+                          <div className="h-14 w-14 rounded-full overflow-hidden mr-4 border-2 border-nexacore-teal dark:border-primary">
+                            <img 
+                              src={testimonial.image} 
+                              alt={testimonial.name}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                           <div>
-                            <h4 className="text-lg font-medium text-white dark:text-foreground">{testimonial.name}</h4>
-                            <p className="text-white/60 dark:text-muted-foreground text-sm">{testimonial.role}</p>
+                            <h4 className={`text-lg font-medium ${
+                              theme === 'dark' ? 'text-white' : 'text-gray-900'
+                            }`}>{testimonial.name}</h4>
+                            <p className={`text-sm ${
+                              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                            }`}>{testimonial.role} | {testimonial.company}</p>
                           </div>
                           <div className="ml-auto flex">
                             {renderStars(testimonial.rating)}
                           </div>
                         </div>
                         <div className="relative">
-                          <Quote className="absolute -top-2 -left-2 w-8 h-8 text-nexacore-teal/20 dark:text-primary/20" />
-                          <p className="text-white/80 dark:text-foreground/80 italic pl-6 leading-relaxed">
-                            {testimonial.content}
+                          <Quote className={`absolute -top-2 -left-2 w-8 h-8 ${
+                            theme === 'dark' ? 'text-primary/20' : 'text-nexacore-teal/20'
+                          }`} />
+                          <p className={`pl-6 leading-relaxed italic ${
+                            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
+                            "{testimonial.content}"
                           </p>
                         </div>
                       </CardContent>
@@ -117,7 +155,11 @@ const Testimonials = () => {
             {/* Navigation buttons */}
             <button 
               onClick={handlePrev}
-              className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 bg-nexacore-teal/80 dark:bg-primary/80 hover:bg-nexacore-teal dark:hover:bg-primary text-nexacore-blue-dark dark:text-background h-10 w-10 rounded-full flex items-center justify-center transition-all focus:outline-none"
+              className={`absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 h-10 w-10 rounded-full flex items-center justify-center transition-all focus:outline-none z-10 ${
+                theme === 'dark'
+                  ? 'bg-primary/80 hover:bg-primary text-background'
+                  : 'bg-nexacore-teal/80 hover:bg-nexacore-teal text-white'
+              }`}
               aria-label="Previous testimonial"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,7 +168,11 @@ const Testimonials = () => {
             </button>
             <button 
               onClick={handleNext}
-              className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 bg-nexacore-teal/80 dark:bg-primary/80 hover:bg-nexacore-teal dark:hover:bg-primary text-nexacore-blue-dark dark:text-background h-10 w-10 rounded-full flex items-center justify-center transition-all focus:outline-none"
+              className={`absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 h-10 w-10 rounded-full flex items-center justify-center transition-all focus:outline-none z-10 ${
+                theme === 'dark'
+                  ? 'bg-primary/80 hover:bg-primary text-background'
+                  : 'bg-nexacore-teal/80 hover:bg-nexacore-teal text-white'
+              }`}
               aria-label="Next testimonial"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -141,10 +187,10 @@ const Testimonials = () => {
               <button 
                 key={index}
                 onClick={() => setActiveIndex(index)}
-                className={`h-2 w-2 rounded-full transition-all ${
+                className={`h-2 rounded-full transition-all ${
                   index === activeIndex 
-                    ? 'bg-nexacore-teal w-6 dark:bg-primary' 
-                    : 'bg-white/30 dark:bg-foreground/30 hover:bg-white/50 dark:hover:bg-foreground/50'
+                    ? `w-6 ${theme === 'dark' ? 'bg-primary' : 'bg-nexacore-teal'}` 
+                    : `w-2 ${theme === 'dark' ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'}`
                 }`}
                 aria-label={`Go to testimonial ${index + 1}`}
               />

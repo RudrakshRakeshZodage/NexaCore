@@ -14,6 +14,7 @@ export const generateReport = async (
     education?: any;
     health?: any;
     finance?: any;
+    faceAnalysis?: any;
     user?: {
       name?: string;
       email?: string;
@@ -116,7 +117,7 @@ Format the report with clear headings, bullet points, and a professional tone.`;
     case "health":
       return `${basePrompt}
 Health Data: ${JSON.stringify(data.health || {})}
-Emotion Analysis: ${JSON.stringify(data.emotionAnalysis || {})}
+Face Analysis: ${JSON.stringify(data.faceAnalysis || {})}
 
 Please create a comprehensive health and wellness report with the following sections:
 1. Health Status Overview
@@ -146,7 +147,7 @@ Format the report with clear headings, bullet points, and a professional tone.`;
       return `${basePrompt}
 Education Data: ${JSON.stringify(data.education || {})}
 Health Data: ${JSON.stringify(data.health || {})}
-Emotion Analysis: ${JSON.stringify(data.emotionAnalysis || {})}
+Face Analysis: ${JSON.stringify(data.faceAnalysis || {})}
 Finance Data: ${JSON.stringify(data.finance || {})}
 
 Please create a comprehensive NexaCore report covering education, health, and finances with the following sections:
@@ -262,6 +263,104 @@ ${data.finance?.monthlyIncome ?
 4. Schedule an annual comprehensive financial review
 
 Remember that financial health is built through consistent habits and informed decisions over time.`;
+    
+    case "education":
+      return `# Education Report for ${userName}
+
+## Executive Summary
+This report analyzes your current educational progress and provides recommendations to help you achieve your learning goals.
+
+## Current Education Status
+${data.education?.currentCourses ? 
+`You are currently enrolled in courses related to ${Array.isArray(data.education.currentCourses) ? data.education.currentCourses.join(", ") : data.education.currentCourses}.` 
+: 
+'No current course information was provided.'}
+
+## Skills & Knowledge Analysis
+${data.education?.skills ? 
+`Your skill set includes ${Array.isArray(data.education.skills) ? data.education.skills.join(", ") : data.education.skills}.` 
+: 
+'No skills information was provided for analysis.'}
+
+## Course & Learning Recommendations
+- Focus on building core competencies in your field
+- Consider supplementing formal education with online courses
+- Join study groups or communities of practice
+- Implement spaced repetition and active recall in your study strategy
+- Seek practical application opportunities for theoretical knowledge
+
+## Career Path Insights
+- Research emerging trends in your field of interest
+- Connect with professionals through networking events and platforms
+- Consider how your current educational path aligns with long-term goals
+- Explore internship or volunteering opportunities for practical experience
+
+## Next Steps & Action Plan
+1. Set specific, measurable learning goals for the next quarter
+2. Create a structured study schedule with dedicated focus time
+3. Implement a knowledge management system for notes and resources
+4. Seek feedback on your progress from mentors or instructors
+5. Schedule regular review sessions to reinforce learning
+
+Remember that effective learning is an active, ongoing process that requires intentional practice and reflection.`;
+    
+    case "comprehensive":
+      return `# Comprehensive Report for ${userName}
+
+## Executive Summary
+This report provides an integrated analysis of your education, health, and financial data to offer holistic recommendations for personal development and wellbeing.
+
+${data.faceAnalysis ? `Based on facial analysis, your dominant expression is ${data.faceAnalysis.dominantExpression}, which may provide insights into your current emotional state.` : ''}
+
+## Education Status & Recommendations
+${data.education?.currentCourses ? 
+`You are currently focusing on ${Array.isArray(data.education.currentCourses) ? data.education.currentCourses.join(", ") : data.education.currentCourses}.` 
+: 
+'No education data was provided for analysis.'}
+
+Key recommendations:
+- Align your educational pursuits with both your interests and career goals
+- Consider a balanced approach to learning that includes formal education and self-directed study
+- Implement effective study techniques like active recall and spaced repetition
+
+## Health & Wellness Assessment
+${data.health ? 
+`Your current health metrics indicate ${data.health.stressLevel === 'high' ? 'a need for stress management strategies' : 'generally positive wellness factors'}.` 
+: 
+'No health data was provided for analysis.'}
+
+Key recommendations:
+- Maintain a balanced diet and regular physical activity
+- Implement stress management techniques like mindfulness or meditation
+- Prioritize 7-9 hours of quality sleep each night
+- Consider regular health check-ups and preventative care
+
+## Financial Status & Strategies
+${data.finance?.monthlyIncome ? 
+`With a monthly income of $${data.finance.monthlyIncome}, your financial picture shows ${data.finance.savingsTarget >= 20 ? 'positive savings habits' : 'opportunities for improved savings'}.` 
+: 
+'No financial data was provided for analysis.'}
+
+Key recommendations:
+- Build an emergency fund covering 3-6 months of expenses
+- Follow a structured budget using the 50/30/20 rule
+- Review and optimize recurring expenses regularly
+- Consider long-term investment strategies aligned with your goals
+
+## Integrated Life Planning
+Holistic recommendations:
+- Balance your time allocation between educational pursuits, health activities, and financial management
+- Consider how improvements in one area might positively impact others
+- Implement a consistent review process to track progress across all domains
+- Practice self-compassion as you work toward integrated personal growth
+
+## Next Steps & Action Plan
+1. Identify one priority action from each domain to implement this week
+2. Schedule regular check-ins to review progress across all areas
+3. Consider how your educational pursuits might impact both your health and finances
+4. Develop systems that make positive habits easier to maintain
+
+Remember that personal development is most effective when approached holistically, with attention to how different aspects of life impact one another.`;
     
     default:
       return `# NexaCore Report for ${userName}

@@ -7,9 +7,11 @@ import UserFlow from "@/components/UserFlow";
 import AuthSection from "@/components/AuthSection";
 import Footer from "@/components/Footer";
 import Testimonials from "@/components/Testimonials";
+import { useTheme } from "@/context/ThemeContext";
 
 const Index = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const { theme } = useTheme();
 
   // Images for parallax effect
   const images = [
@@ -64,7 +66,7 @@ const Index = () => {
     {
       src: "/lovable-uploads/067333f5-c8c6-49f4-94d9-e5c28cd8f5ff.png",
       alt: "NexaCore Banner",
-      position: "top-1/3 left-1/2 -translate-x-1/2 w-[700px] opacity-20",
+      position: "top-1/3 left-1/2 -translate-x-1/2 w-[700px] opacity-30",
       rotate: "rotate-0",
       delay: "delay-150",
       opacityValue: "30"
@@ -73,10 +75,40 @@ const Index = () => {
 
   useEffect(() => {
     setIsLoaded(true);
+    
+    // Add scroll animation for elements
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    // Select all elements with animation-trigger class
+    document.querySelectorAll('.animation-trigger').forEach(el => {
+      el.classList.remove('fade-in');
+      observer.observe(el);
+    });
+    
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   return (
-    <div className="min-h-screen bg-nexacore-blue-dark dark:bg-background overflow-hidden relative">
+    <div className={`min-h-screen overflow-hidden relative ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-b from-gray-900 to-gray-950' 
+        : 'bg-gradient-to-b from-gray-50 to-white'
+    }`}>
       {/* Decorative floating images with animation */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         {images.map((img, index) => (
@@ -91,14 +123,20 @@ const Index = () => {
             <img 
               src={img.src} 
               alt={img.alt} 
-              className="w-full h-auto rounded-lg shadow-2xl transition-all duration-500 hover:shadow-nexacore-teal/30 hover:scale-105"
+              className={`w-full h-auto rounded-lg shadow-2xl transition-all duration-500 hover:shadow-nexacore-teal/30 hover:scale-105 ${
+                theme === 'dark' ? 'filter brightness-75' : ''
+              }`}
             />
           </div>
         ))}
       </div>
       
       {/* Animated gradient overlay */}
-      <div className="fixed inset-0 bg-gradient-to-br from-nexacore-blue-dark/90 via-nexacore-blue-dark/70 to-nexacore-blue-dark/90 dark:from-background/95 dark:via-background/80 dark:to-background/95 z-0"></div>
+      <div className={`fixed inset-0 z-0 ${
+        theme === 'dark'
+          ? 'bg-gradient-to-br from-gray-900/90 via-gray-900/70 to-gray-900/90'
+          : 'bg-gradient-to-br from-white/90 via-white/70 to-white/90'
+      }`}></div>
       
       {/* Main content */}
       <div className={`relative z-10 transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
