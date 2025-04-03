@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8nWebhook } from "./automationHelpers";
 import { downloadPDFReport } from "./pdfReportGenerator";
@@ -73,10 +74,15 @@ export const generateReport = async (
       data.user?.name || "User"
     );
     
+    // Use the string URL from pdfResult (assuming downloadPDFReport returns a string URL)
+    const reportUrl = typeof pdfResult === 'string' 
+      ? pdfResult 
+      : (pdfResult as any).fileName || '';
+    
     return {
       success: true,
       reportText,
-      reportUrl: pdfResult,
+      reportUrl,
       message: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} report generated successfully`
     };
   } catch (error) {

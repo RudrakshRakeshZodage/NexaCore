@@ -167,9 +167,14 @@ const FaceAnalysis = ({ onAnalysisComplete }: FaceAnalysisProps) => {
         let maxExpression = 'neutral';
         let maxValue = 0;
         
-        Object.entries(expressions).forEach(([expression, value]) => {
+        // Convert FaceExpressions to Record<string, number>
+        const expressionsRecord: Record<string, number> = {};
+        Object.keys(expressions).forEach(key => {
+          const value = expressions[key as keyof faceapi.FaceExpressions];
+          expressionsRecord[key] = value;
+          
           if (value > maxValue) {
-            maxExpression = expression;
+            maxExpression = key;
             maxValue = value;
           }
         });
@@ -177,7 +182,7 @@ const FaceAnalysis = ({ onAnalysisComplete }: FaceAnalysisProps) => {
         // Format the results
         const results = {
           dominantExpression: maxExpression,
-          expressions: expressions,
+          expressions: expressionsRecord,
         };
         
         setExpressionResults(results);

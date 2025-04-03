@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
-import { Storage } from 'firebase/storage';
+import { FirebaseStorage } from 'firebase/storage';
 import { auth, db, storage } from '../lib/firebase';
 import { useEffect, useState } from 'react';
 
@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 type FirebaseContextType = {
   auth: Auth;
   db: Firestore;
-  storage: Storage;
+  storage: FirebaseStorage;
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;

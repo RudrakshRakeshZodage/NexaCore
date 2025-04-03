@@ -80,7 +80,7 @@ const Health = () => {
         faceAnalysis: faceAnalysisResults,
       };
       
-      const pdfUrl = await downloadPDFReport(
+      const pdfResult = await downloadPDFReport(
         healthData, 
         'health', 
         'NexaCore User'
@@ -91,7 +91,12 @@ const Health = () => {
         description: "Your health report has been generated and downloaded",
       });
       
-      // Open the PDF in a new window
+      // Extract URL string from pdfResult
+      const pdfUrl = typeof pdfResult === 'string' 
+        ? pdfResult 
+        : (pdfResult as any).fileName || '';
+      
+      // Open the PDF in a new window if URL is available
       if (pdfUrl) {
         window.open(pdfUrl, '_blank');
       }
