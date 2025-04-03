@@ -1,455 +1,320 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import * as faceapi from '@vladmandic/face-api';
-import { Button } from "@/components/ui/button";
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Camera, Download, RefreshCw, Smile, Brain, AlertCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { Loader2, Camera, Smile } from "lucide-react";
+import * as faceapi from '@vladmandic/face-api';
 
 interface FaceAnalysisProps {
-  onAnalysisComplete?: (data: any) => void;
+  onAnalysisComplete?: (results: any) => void;
 }
 
-// Define wellness metrics type with additional wellness categories
-interface WellnessMetrics {
-  happiness: number;
-  energy: number;
-  motivation: number;
-  relaxation: number;
-  sleepQuality: number;
-}
-
-interface MentalState {
-  stress: number;
-  fatigue: number;
-  focus: number;
-  anxiety: number;
-  mood: number;
-}
-
-interface FacialAnalysisResult {
-  expressions: {
-    neutral: number;
-    happy: number;
-    sad: number;
-    angry: number;
-    fearful: number;
-    disgusted: number;
-    surprised: number;
-  };
-  dominantExpression: string;
-  wellness: WellnessMetrics;
-  mentalState: MentalState;
-}
-
-const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
-  const [image, setImage] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<FacialAnalysisResult | null>(null);
-  const [modelsLoaded, setModelsLoaded] = useState(false);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+const FaceAnalysis = ({ onAnalysisComplete }: FaceAnalysisProps) => {
+  const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [expressionResults, setExpressionResults] = useState<{
+    dominantExpression: string;
+    expressions: Record<string, number>;
+  } | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
 
-  // Load face-api models
+  // Load face detection models
   useEffect(() => {
     const loadModels = async () => {
+      setIsLoading(true);
       try {
-        // Create models directory if it doesn't exist
-        await ensureModelsDirectory();
+        // Adjust this path based on where your models are stored
+        const modelPath = '/models';
         
-        // For demo purposes, we'll set modelsLoaded to true without actually loading models
-        setModelsLoaded(true);
-        console.log('Face analysis models loaded in demo mode');
+        // Load required models
+        await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
+        await faceapi.nets.faceExpressionNet.loadFromUri(modelPath);
         
-        toast({
-          title: 'Demo Mode Active',
-          description: 'Running in demo mode with simulated facial analysis.',
-        });
+        setIsModelLoaded(true);
+        setIsLoading(false);
       } catch (error) {
-        console.error('Error setting up models:', error);
-        // For demo purposes, we'll still set modelsLoaded to true
-        setModelsLoaded(true);
+        console.error('Error loading models:', error);
         toast({
-          title: 'Demo Mode',
-          description: 'Running in demo mode with simulated data.',
+          title: "Model Loading Error",
+          description: "Failed to load facial analysis models",
+          variant: "destructive",
         });
+        setIsLoading(false);
       }
     };
 
-    if (!modelsLoaded) {
-      loadModels();
-    }
+    loadModels();
+  }, [toast]);
 
-    return () => {
+  // Handle camera start/stop
+  const handleCameraToggle = () => {
+    if (cameraActive) {
       stopCamera();
-    };
-  }, [toast, modelsLoaded]);
-
-  const ensureModelsDirectory = async () => {
-    try {
-      // This is just to check if the directory exists
-      const response = await fetch('/models/README.md');
-      if (response.ok) {
-        console.log('Models directory exists');
-      } else {
-        console.log('Models directory may need to be created on the server');
-      }
-    } catch (error) {
-      console.warn('Models directory check failed:', error);
+    } else {
+      startCamera();
     }
   };
 
+  // Start camera
   const startCamera = async () => {
-    if (videoRef.current) {
-      try {
-        setCameraError(null);
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
+    if (!isModelLoaded) {
+      toast({
+        title: "Models Not Loaded",
+        description: "Please wait for the facial analysis models to load",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user' } 
+      });
+      
+      if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        setIsCameraActive(true);
-        
-        toast({
-          title: 'Camera Started',
-          description: 'Your camera is now active. Click Capture to analyze your face.',
-        });
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-        setCameraError('Unable to access your camera. Please ensure you have granted permission.');
-        toast({
-          title: 'Camera Error',
-          description: 'Unable to access your camera. Please ensure you have granted permission.',
-          variant: 'destructive',
-        });
       }
+      
+      setCameraActive(true);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast({
+        title: "Camera Error",
+        description: "Could not access your camera. Please check permissions.",
+        variant: "destructive",
+      });
     }
   };
 
+  // Stop camera
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       const tracks = stream.getTracks();
+      
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
-      setIsCameraActive(false);
-    }
-  };
-
-  const captureImage = () => {
-    if (videoRef.current && canvasRef.current && isCameraActive) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth || 320;
-      canvas.height = video.videoHeight || 240;
       
-      if (context) {
-        // Draw the video frame to canvas
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Convert to data URL
-        const imageDataUrl = canvas.toDataURL('image/png');
-        setImage(imageDataUrl);
-        
-        // Stop camera after capture
-        stopCamera();
-        
-        // Analyze the captured image
-        analyzeImage(imageDataUrl);
-      } else {
-        toast({
-          title: 'Canvas Error',
-          description: 'Could not initialize canvas for capture.',
-          variant: 'destructive',
-        });
+      setCameraActive(false);
+      
+      // Clear canvas
+      if (canvasRef.current) {
+        const context = canvasRef.current.getContext('2d');
+        if (context) {
+          context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
       }
-    } else {
-      toast({
-        title: 'Camera Not Ready',
-        description: 'Please wait for the camera to initialize fully before capturing.',
-        variant: 'destructive',
-      });
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // Analyze facial expressions
+  const analyzeExpressions = async () => {
+    if (!videoRef.current || !canvasRef.current || !cameraActive) {
+      toast({
+        title: "Camera Not Active",
+        description: "Please start the camera before analyzing",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const imageDataUrl = e.target?.result as string;
-      setImage(imageDataUrl);
-      analyzeImage(imageDataUrl);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const analyzeImage = async (imageDataUrl: string) => {
     setIsAnalyzing(true);
     
     try {
-      const img = new Image();
-      img.src = imageDataUrl;
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
       
-      await new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-      });
-
-      // Generate mock facial analysis data with expanded metrics
-      const mockAnalysis: FacialAnalysisResult = {
-        expressions: {
-          neutral: Math.random(),
-          happy: Math.random(),
-          sad: Math.random(),
-          angry: Math.random(),
-          fearful: Math.random(),
-          disgusted: Math.random(),
-          surprised: Math.random()
-        },
-        dominantExpression: '', // This will be calculated below
-        wellness: {
-          happiness: Math.floor(Math.random() * 100),
-          energy: Math.floor(Math.random() * 100),
-          motivation: Math.floor(Math.random() * 100),
-          relaxation: Math.floor(Math.random() * 100),
-          sleepQuality: Math.floor(Math.random() * 100)
-        },
-        mentalState: {
-          stress: Math.floor(Math.random() * 100),
-          fatigue: Math.floor(Math.random() * 100),
-          focus: Math.floor(Math.random() * 100),
-          anxiety: Math.floor(Math.random() * 100),
-          mood: Math.floor(Math.random() * 100)
-        }
-      };
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       
-      // Calculate the dominant expression
-      const dominantExpression = Object.entries(mockAnalysis.expressions)
-        .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+      // Detect faces and expressions
+      const detections = await faceapi.detectAllFaces(
+        video, 
+        new faceapi.TinyFaceDetectorOptions()
+      ).withFaceExpressions();
       
-      mockAnalysis.dominantExpression = dominantExpression;
-      
-      setAnalysisResults(mockAnalysis);
-      
-      if (onAnalysisComplete) {
-        onAnalysisComplete(mockAnalysis);
+      // Draw detections on canvas
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Mirror the canvas to match selfie view
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+        
+        // Draw the video frame
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Restore transformation
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        
+        // Draw detections
+        faceapi.draw.drawDetections(canvas, detections);
+        faceapi.draw.drawFaceExpressions(canvas, detections);
       }
       
-      toast({
-        title: 'Analysis Complete',
-        description: 'Facial expression analysis has been completed successfully.',
-      });
+      // Process results
+      if (detections.length > 0) {
+        const { expressions } = detections[0];
+        
+        // Find the dominant expression
+        let maxExpression = 'neutral';
+        let maxValue = 0;
+        
+        Object.entries(expressions).forEach(([expression, value]) => {
+          if (value > maxValue) {
+            maxExpression = expression;
+            maxValue = value;
+          }
+        });
+        
+        // Format the results
+        const results = {
+          dominantExpression: maxExpression,
+          expressions: expressions,
+        };
+        
+        setExpressionResults(results);
+        
+        // Call the callback if provided
+        if (onAnalysisComplete) {
+          onAnalysisComplete(results);
+        }
+        
+        toast({
+          title: "Analysis Complete",
+          description: `Your dominant expression is ${maxExpression}`,
+        });
+      } else {
+        toast({
+          title: "No Face Detected",
+          description: "Please ensure your face is clearly visible to the camera",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error('Analysis error:', error);
+      console.error('Error analyzing face:', error);
       toast({
-        title: 'Analysis Failed',
-        description: 'Failed to analyze the face. Please try again with a clearer image.',
-        variant: 'destructive',
+        title: "Analysis Error",
+        description: "Failed to analyze facial expressions",
+        variant: "destructive",
       });
-    } finally {
-      setIsAnalyzing(false);
     }
+    
+    setIsAnalyzing(false);
   };
 
-  const resetAnalysis = () => {
-    setImage(null);
-    setAnalysisResults(null);
-    setIsCameraActive(false);
-    setCameraError(null);
+  // Format expression percentage
+  const formatPercentage = (value: number): string => {
+    return `${(value * 100).toFixed(1)}%`;
   };
 
   return (
-    <Card className="bg-white/90 dark:bg-gray-800/90 border-gray-200 dark:border-gray-700 shadow-lg">
+    <Card className="bg-nexacore-blue-dark/50 border-white/10">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
-          <Camera className="text-nexacore-teal dark:text-primary" size={20} />
-          Face Analysis
-        </CardTitle>
-        <CardDescription className="text-gray-600 dark:text-gray-300">
-          Analyze facial expressions and wellness metrics using AI
+        <CardTitle className="text-white">Emotion Analysis</CardTitle>
+        <CardDescription className="text-white/70">
+          Analyze your facial expressions to detect emotions
         </CardDescription>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div className="flex justify-center mb-4">
-          {image ? (
-            <div className="relative">
-              <img 
-                src={image} 
-                alt="Captured" 
-                className="rounded-lg max-h-64 border border-gray-200 dark:border-gray-700"
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                className="absolute top-2 right-2 border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                onClick={resetAnalysis}
-              >
-                <RefreshCw className="h-4 w-4 mr-1" /> Reset
-              </Button>
-            </div>
-          ) : (
-            <div className="relative w-full max-w-[320px]">
-              {cameraError && (
-                <div className="absolute inset-0 flex items-center justify-center flex-col bg-red-500/10 rounded-lg border border-red-500/50 text-red-600 dark:text-red-400 p-4 z-10">
-                  <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-                  <p className="text-center text-sm">{cameraError}</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-2 border-red-200 text-red-600 dark:border-red-800 dark:text-red-400"
-                    onClick={() => setCameraError(null)}
-                  >
-                    Dismiss
-                  </Button>
-                </div>
-              )}
+      <CardContent className="space-y-6">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center p-12">
+            <Loader2 className="h-8 w-8 animate-spin text-nexacore-teal mb-4" />
+            <p className="text-white/70">Loading facial analysis models...</p>
+          </div>
+        ) : (
+          <>
+            <div className="relative w-full aspect-video bg-black/30 rounded-lg overflow-hidden flex items-center justify-center">
               <video 
                 ref={videoRef}
+                className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]" 
                 autoPlay 
+                muted 
                 playsInline
-                muted
-                className="rounded-lg border border-gray-200 bg-gray-100 w-full h-[240px] object-cover dark:border-gray-700 dark:bg-gray-900"
               />
-              <canvas ref={canvasRef} className="hidden" />
-            </div>
-          )}
-        </div>
-        
-        {!image && (
-          <div className="flex gap-4 justify-center">
-            <Button
-              variant="outline"
-              className="border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-              onClick={startCamera}
-              disabled={isCameraActive}
-            >
-              <Camera className="mr-2 h-4 w-4" />
-              Start Camera
-            </Button>
-            
-            <Button
-              variant="outline"
-              className="border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Upload Image
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleImageUpload}
-            />
-          </div>
-        )}
-        
-        {isCameraActive && (
-          <div className="flex justify-center">
-            <Button
-              className="bg-nexacore-teal text-white hover:bg-nexacore-teal/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
-              onClick={captureImage}
-            >
-              Capture
-            </Button>
-          </div>
-        )}
-        
-        {isAnalyzing && (
-          <div className="text-center py-4">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-nexacore-teal dark:text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
-              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
-            </div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Analyzing face...</p>
-          </div>
-        )}
-        
-        {analysisResults && (
-          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">Analysis Results</h3>
-            
-            <div className="mb-4">
-              <p className="text-gray-600 mb-2 dark:text-gray-400">Dominant Emotion:</p>
-              <Badge className="bg-nexacore-teal text-white font-medium dark:bg-primary dark:text-primary-foreground">
-                {analysisResults.dominantExpression.charAt(0).toUpperCase() + analysisResults.dominantExpression.slice(1)}
-              </Badge>
-            </div>
-            
-            <Tabs defaultValue="expressions" className="w-full">
-              <TabsList className="grid grid-cols-3 mb-4 bg-gray-100 dark:bg-gray-700/50">
-                <TabsTrigger value="expressions" className="text-gray-700 dark:text-gray-200">Expressions</TabsTrigger>
-                <TabsTrigger value="wellness" className="text-gray-700 dark:text-gray-200">Wellness</TabsTrigger>
-                <TabsTrigger value="mental" className="text-gray-700 dark:text-gray-200">Mental State</TabsTrigger>
-              </TabsList>
+              <canvas 
+                ref={canvasRef} 
+                className="absolute inset-0 w-full h-full"
+              />
               
-              <TabsContent value="expressions" className="space-y-4 animate-fade-in">
+              {!cameraActive && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
+                  <Camera className="h-12 w-12 text-nexacore-teal mb-4" />
+                  <p className="text-white">Start the camera to begin emotion analysis</p>
+                </div>
+              )}
+              
+              {isAnalyzing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                  <Loader2 className="h-12 w-12 animate-spin text-nexacore-teal" />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button
+                variant={cameraActive ? "destructive" : "default"}
+                className={!cameraActive ? "bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90" : ""}
+                onClick={handleCameraToggle}
+                disabled={isAnalyzing}
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                {cameraActive ? "Stop Camera" : "Start Camera"}
+              </Button>
+              
+              <Button
+                className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
+                onClick={analyzeExpressions}
+                disabled={!cameraActive || isAnalyzing}
+              >
+                {isAnalyzing ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</>
+                ) : (
+                  <><Smile className="mr-2 h-4 w-4" /> Analyze Emotions</>
+                )}
+              </Button>
+            </div>
+            
+            {expressionResults && (
+              <div className="bg-white/10 p-4 rounded-lg">
+                <h3 className="text-white font-medium text-lg mb-2 flex items-center">
+                  <Smile className="mr-2 h-5 w-5 text-nexacore-teal" />
+                  Emotion Analysis Results
+                </h3>
+                <p className="text-white mb-3">
+                  Dominant emotion: <span className="font-bold text-nexacore-teal">{expressionResults.dominantExpression}</span>
+                </p>
                 <div className="space-y-2">
-                  {Object.entries(analysisResults.expressions).map(([expression, probability]: [string, any]) => (
-                    <div key={expression} className="flex items-center">
-                      <span className="text-gray-700 text-sm w-24 dark:text-gray-300">{expression.charAt(0).toUpperCase() + expression.slice(1)}:</span>
-                      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-nexacore-teal dark:bg-primary rounded-full"
-                          style={{ width: `${Number(probability) * 100}%` }}
-                        ></div>
+                  {Object.entries(expressionResults.expressions).map(([expression, value]) => (
+                    <div key={expression} className="flex items-center justify-between">
+                      <span className="text-white/80 capitalize">{expression}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white/10 h-2 w-24 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-nexacore-teal h-full rounded-full" 
+                            style={{ width: `${value * 100}%` }} 
+                          />
+                        </div>
+                        <span className="text-white/80 text-sm">{formatPercentage(value)}</span>
                       </div>
-                      <span className="text-gray-700 text-sm ml-2 w-10 dark:text-gray-300">
-                        {(Number(probability) * 100).toFixed(0)}%
-                      </span>
                     </div>
                   ))}
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="wellness" className="space-y-4 animate-fade-in">
-                <div className="space-y-3">
-                  {Object.entries(analysisResults.wellness).map(([metric, value]) => (
-                    <div key={metric} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700 text-sm capitalize dark:text-gray-300">{metric}:</span>
-                        <span className="text-gray-700 text-sm dark:text-gray-300">{value}%</span>
-                      </div>
-                      <Progress value={value} className="h-2" />
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="mental" className="space-y-4 animate-fade-in">
-                <div className="space-y-3">
-                  {Object.entries(analysisResults.mentalState).map(([state, value]) => (
-                    <div key={state} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700 text-sm capitalize dark:text-gray-300">{state}:</span>
-                        <span className="text-gray-700 text-sm dark:text-gray-300">{value}%</span>
-                      </div>
-                      <Progress value={value} className="h-2" />
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
-      
-      <CardFooter>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          This analysis uses facial recognition AI and is for demonstration purposes only. Data privacy is maintained as processing occurs locally in your browser.
+      <CardFooter className="flex flex-col items-start">
+        <p className="text-white/60 text-sm">
+          Note: Your facial expression data is processed locally and not stored or sent to external servers.
         </p>
       </CardFooter>
     </Card>

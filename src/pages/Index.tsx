@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
-import UserFlow from "@/components/UserFlow";
+import Testimonials from "@/components/Testimonials";
 import AuthSection from "@/components/AuthSection";
 import Footer from "@/components/Footer";
-import Testimonials from "@/components/Testimonials";
 import { useTheme } from "@/context/ThemeContext";
+import ChatbotScript from "@/components/ChatbotScript";
+import { motion } from "framer-motion";
 
 const Index = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -62,14 +63,6 @@ const Index = () => {
       rotate: "-rotate-3",
       delay: "delay-200",
       opacityValue: "10"
-    },
-    {
-      src: "/lovable-uploads/067333f5-c8c6-49f4-94d9-e5c28cd8f5ff.png",
-      alt: "NexaCore Banner",
-      position: "top-1/3 left-1/2 -translate-x-1/2 w-[700px] opacity-30",
-      rotate: "rotate-0",
-      delay: "delay-150",
-      opacityValue: "30"
     }
   ];
 
@@ -143,11 +136,13 @@ const Index = () => {
         <Navbar />
         <Hero />
         <Features />
-        <UserFlow />
         <Testimonials />
         <AuthSection />
         <Footer />
       </div>
+      
+      {/* Add Chatbot */}
+      <ChatbotScript />
     </div>
   );
 };

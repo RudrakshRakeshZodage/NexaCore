@@ -1,10 +1,9 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8nWebhook } from "./automationHelpers";
-import { generatePDFReport, downloadPDFReport } from "./pdfReportGenerator";
+import { downloadPDFReport } from "./pdfReportGenerator";
 
-// OpenAI API key (this is a placeholder - in a production app, you would use environment variables)
-const OPENAI_API_KEY = "sk-your-api-key";
+// OpenAI API key
+const OPENAI_API_KEY = "AIzaSyDSbWxbhKo2iUw2woR0tomAl71Wq7XTqJw";
 
 /**
  * Generate a report from user data using OpenAI API
@@ -33,7 +32,7 @@ export const generateReport = async (
   try {
     const prompt = generatePromptForReport(data, reportType);
     
-    // Call OpenAI API - using the correct endpoint and authorization format
+    // Call OpenAI API with the provided API key
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -45,7 +44,7 @@ export const generateReport = async (
         messages: [
           {
             role: "system",
-            content: "You are an AI assistant specializing in creating detailed personalized reports based on user data. Format your response with clear sections, bullet points, and actionable recommendations."
+            content: "You are an AI assistant specializing in creating detailed personalized reports based on user data. Format your response with clear sections, bullet points, and actionable recommendations. Make the report very detailed, at least 4-5 pages long."
           },
           {
             role: "user",
@@ -53,7 +52,7 @@ export const generateReport = async (
           }
         ],
         temperature: 0.7,
-        max_tokens: 2048
+        max_tokens: 4096
       })
     });
 
@@ -67,19 +66,17 @@ export const generateReport = async (
       reportText = result.choices[0].message.content;
     }
     
-    // Generate PDF
-    const { blob: pdfBlob, url: reportUrl } = await generatePDFReport(
+    // Generate PDF from report text
+    const pdfResult = await downloadPDFReport(
       data, 
       reportType, 
-      data.user?.name || "User",
-      { includeTimestamp: true }
+      data.user?.name || "User"
     );
     
     return {
       success: true,
       reportText,
-      reportUrl,
-      pdfBlob,
+      reportUrl: pdfResult,
       message: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} report generated successfully`
     };
   } catch (error) {
@@ -98,50 +95,64 @@ const generatePromptForReport = (
   data: any,
   reportType: "education" | "health" | "finance" | "comprehensive"
 ): string => {
-  const basePrompt = "Generate a detailed NexaCore report with actionable insights based on the following user data:\n\n";
+  const basePrompt = "Generate a detailed NexaCore report with actionable insights based on the following user data. Make the report comprehensive, about 4-5 pages long with detailed analysis and recommendations:\n\n";
   
   switch (reportType) {
     case "education":
       return `${basePrompt}
 Education Data: ${JSON.stringify(data.education || {})}
 
-Please create a comprehensive education report with the following sections:
-1. Current Education Status Summary
-2. Skills & Knowledge Analysis
-3. Course & Learning Recommendations
-4. Career Path Insights
-5. Next Steps & Action Plan
+Please create a comprehensive education report (4-5 pages long) with the following sections:
+1. Executive Summary
+2. Current Education Status Summary
+3. Detailed Skills & Knowledge Analysis
+4. In-depth Learning Style Assessment
+5. Course & Learning Recommendations with specific resources
+6. Career Path Insights with industry analysis
+7. Study Technique Recommendations
+8. Technology Tools for Learning
+9. Next Steps & Detailed Action Plan
 
-Format the report with clear headings, bullet points, and a professional tone.`;
+Format the report with clear headings, bullet points, and a professional tone. Include specific examples, resources, and actionable advice throughout.`;
 
     case "health":
       return `${basePrompt}
 Health Data: ${JSON.stringify(data.health || {})}
 Face Analysis: ${JSON.stringify(data.faceAnalysis || {})}
 
-Please create a comprehensive health and wellness report with the following sections:
-1. Health Status Overview
-2. Emotional Wellbeing Assessment
-3. Nutrition & Exercise Recommendations
-4. Stress Management Strategies
-5. Sleep Improvement Plan
-6. Next Steps & Action Plan
+Please create a comprehensive health and wellness report (4-5 pages long) with the following sections:
+1. Executive Summary
+2. Health Status Overview
+3. Emotional Wellbeing Assessment
+4. Comprehensive Nutrition Plan with meal examples
+5. Exercise Recommendations with specific routines
+6. Stress Management Strategies
+7. Sleep Improvement Plan
+8. Mental Health Considerations
+9. Preventative Health Measures
+10. Next Steps & Detailed Action Plan
 
-Format the report with clear headings, bullet points, and a professional tone.`;
+Format the report with clear headings, bullet points, and a professional tone. Include specific examples, routines, meal plans, and actionable advice throughout.`;
 
     case "finance":
       return `${basePrompt}
 Finance Data: ${JSON.stringify(data.finance || {})}
 
-Please create a comprehensive financial report with the following sections:
-1. Financial Status Overview
-2. Budget Analysis
-3. Savings & Investment Recommendations
-4. Expense Optimization Strategies
-5. Income Enhancement Opportunities
-6. Next Steps & Action Plan
+Please create a comprehensive financial report (4-5 pages long) with the following sections:
+1. Executive Summary
+2. Financial Status Overview
+3. Detailed Budget Analysis
+4. Savings & Investment Recommendations
+5. Expense Optimization Strategies
+6. Debt Management Plan
+7. Income Enhancement Opportunities
+8. Tax Planning Considerations
+9. Retirement Planning Insights
+10. Estate Planning Basics
+11. Financial Goals Timeline
+12. Next Steps & Detailed Action Plan
 
-Format the report with clear headings, bullet points, and a professional tone.`;
+Format the report with clear headings, bullet points, and a professional tone. Include specific examples, calculations, resource recommendations, and actionable advice throughout.`;
 
     case "comprehensive":
       return `${basePrompt}
@@ -150,15 +161,18 @@ Health Data: ${JSON.stringify(data.health || {})}
 Face Analysis: ${JSON.stringify(data.faceAnalysis || {})}
 Finance Data: ${JSON.stringify(data.finance || {})}
 
-Please create a comprehensive NexaCore report covering education, health, and finances with the following sections:
+Please create a comprehensive NexaCore report (4-5 pages long) covering education, health, and finances with the following sections:
 1. Executive Summary
-2. Education Status & Recommendations
-3. Health & Wellness Assessment
-4. Financial Status & Strategies
+2. Education Status & Detailed Recommendations
+3. Health & Wellness Comprehensive Assessment
+4. Financial Status & Detailed Strategies
 5. Integrated Life Planning
-6. Next Steps & Action Plan
+6. Work-Life Balance Recommendations
+7. Technology Tools for Productivity
+8. Resources for Continued Growth
+9. Next Steps & Detailed Action Plan
 
-Format the report with clear headings, bullet points, and a professional tone.`;
+Format the report with clear headings, bullet points, and a professional tone. Include specific examples, resources, and actionable advice throughout.`;
 
     default:
       return basePrompt;

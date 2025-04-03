@@ -1,19 +1,13 @@
 
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
+import ChatbotScript from "./ChatbotScript";
+import { motion } from "framer-motion";
 
 const Hero = () => {
   const { theme } = useTheme();
   
-  const scrollToFeatures = () => {
-    const featuresSection = document.getElementById("features");
-    if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background */}
@@ -27,15 +21,15 @@ const Hero = () => {
       <div className="absolute top-2/3 left-1/3 w-24 h-24 rounded-full bg-nexacore-pink/20 dark:bg-accent/20 blur-3xl animate-pulse"></div>
       
       {/* Content Container */}
-      <div className="container mx-auto px-4 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        {/* Left Side: Text Content */}
-        <div className="text-left animate-fade-in-up">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-6">
-            <img 
-              src="/lovable-uploads/fec8cf80-99ef-4fe4-b3f9-52a5da49efc0.png" 
-              alt="Workspace with laptop" 
-              className="rounded-lg shadow-xl w-full max-w-[320px] md:max-w-[160px] mb-6 md:mb-0 transform hover:scale-105 transition-all duration-500"
-            />
+      <div className="container mx-auto px-4 relative z-10 items-center">
+        {/* Text Content */}
+        <motion.div 
+          className="text-center animate-fade-in-up"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className="flex flex-col items-center gap-6 mb-6">
             <h1 className={`text-5xl md:text-7xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               Welcome to <span className="text-gradient">NexaCore</span>
             </h1>
@@ -43,7 +37,7 @@ const Hero = () => {
           <p className={`text-xl md:text-2xl mb-10 ${theme === 'dark' ? 'text-white/80' : 'text-gray-700'}`}>
             Your intelligent companion for education, health, and financial management with AI-powered insights
           </p>
-          <div className="flex flex-col md:flex-row gap-4 mb-16">
+          <div className="flex flex-col md:flex-row justify-center gap-4 mb-16">
             <Link to="/signup">
               <Button size="lg" className={theme === 'dark'
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -52,31 +46,25 @@ const Hero = () => {
               </Button>
             </Link>
           </div>
-        </div>
+        </motion.div>
         
-        {/* Right Side: Image */}
-        <div className="relative h-[400px] md:h-[500px] animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+        {/* Featured Image */}
+        <motion.div 
+          className="mt-12 flex justify-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
           <img 
-            src="/lovable-uploads/067333f5-c8c6-49f4-94d9-e5c28cd8f5ff.png" 
-            alt="NexaCore Dashboard" 
-            className="w-full h-full object-contain rounded-lg shadow-2xl transform hover:scale-105 transition-all duration-500"
+            src="/lovable-uploads/5a800046-950c-4d85-bcc4-6569b72ebeba.png" 
+            alt="Workspace setup with laptop, notebook, coffee and phone" 
+            className="w-full max-w-3xl rounded-lg shadow-2xl transform hover:scale-105 transition-all duration-500"
           />
-          <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-nexacore-teal/30 dark:bg-primary/30 blur-xl -z-10"></div>
-          <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-nexacore-pink/30 dark:bg-accent/30 blur-xl -z-10"></div>
-        </div>
+        </motion.div>
       </div>
       
-      {/* Scroll Down Button with enhanced animation */}
-      <button 
-        onClick={scrollToFeatures} 
-        className={`absolute bottom-12 left-1/2 transform -translate-x-1/2 ${
-          theme === 'dark' ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-        } flex flex-col items-center transition-all duration-300 animate-fade-in-up hover:scale-110`}
-        style={{ animationDelay: "0.6s" }}
-      >
-        <span className="mb-2">Explore</span>
-        <ChevronDown className="animate-bounce" />
-      </button>
+      {/* Add Chatbot */}
+      <ChatbotScript />
     </section>
   );
 };
