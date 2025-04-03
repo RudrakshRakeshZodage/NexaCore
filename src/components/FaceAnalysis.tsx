@@ -4,19 +4,57 @@ import * as faceapi from '@vladmandic/face-api';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Download, RefreshCw } from 'lucide-react';
+import { Camera, Download, RefreshCw, Smile, Brain, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 interface FaceAnalysisProps {
   onAnalysisComplete?: (data: any) => void;
 }
 
+// Define wellness metrics type with additional wellness categories
+interface WellnessMetrics {
+  happiness: number;
+  energy: number;
+  motivation: number;
+  relaxation: number;
+  sleepQuality: number;
+}
+
+interface MentalState {
+  stress: number;
+  fatigue: number;
+  focus: number;
+  anxiety: number;
+  mood: number;
+}
+
+interface FacialAnalysisResult {
+  age: number;
+  gender: string;
+  genderProbability: string;
+  expressions: {
+    neutral: number;
+    happy: number;
+    sad: number;
+    angry: number;
+    fearful: number;
+    disgusted: number;
+    surprised: number;
+  };
+  dominantExpression: string;
+  wellness: WellnessMetrics;
+  mentalState: MentalState;
+}
+
 const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
   const [image, setImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [analysisResults, setAnalysisResults] = useState<FacialAnalysisResult | null>(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +112,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
   const startCamera = async () => {
     if (videoRef.current) {
       try {
+        setCameraError(null);
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
@@ -88,6 +127,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         });
       } catch (error) {
         console.error('Error accessing camera:', error);
+        setCameraError('Unable to access your camera. Please ensure you have granted permission.');
         toast({
           title: 'Camera Error',
           description: 'Unable to access your camera. Please ensure you have granted permission.',
@@ -170,8 +210,8 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         img.onload = () => resolve();
       });
 
-      // Generate mock facial analysis data
-      const mockAnalysis = {
+      // Generate mock facial analysis data with expanded metrics
+      const mockAnalysis: FacialAnalysisResult = {
         age: Math.floor(Math.random() * 40) + 18, // Random age between 18-58
         gender: Math.random() > 0.5 ? 'male' : 'female',
         genderProbability: (Math.random() * 0.3 + 0.7).toFixed(2), // Random probability between 0.7-1.0
@@ -183,6 +223,21 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
           fearful: Math.random(),
           disgusted: Math.random(),
           surprised: Math.random()
+        },
+        dominantExpression: '', // This will be calculated below
+        wellness: {
+          happiness: Math.floor(Math.random() * 100),
+          energy: Math.floor(Math.random() * 100),
+          motivation: Math.floor(Math.random() * 100),
+          relaxation: Math.floor(Math.random() * 100),
+          sleepQuality: Math.floor(Math.random() * 100)
+        },
+        mentalState: {
+          stress: Math.floor(Math.random() * 100),
+          fatigue: Math.floor(Math.random() * 100),
+          focus: Math.floor(Math.random() * 100),
+          anxiety: Math.floor(Math.random() * 100),
+          mood: Math.floor(Math.random() * 100)
         }
       };
       
@@ -218,17 +273,18 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
     setImage(null);
     setAnalysisResults(null);
     setIsCameraActive(false);
+    setCameraError(null);
   };
 
   return (
-    <Card className="bg-nexacore-blue-dark/50 border-white/10">
+    <Card className="bg-nexacore-blue-dark/50 border-white/10 dark:bg-background/70">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Camera className="text-nexacore-teal" size={20} />
+        <CardTitle className="flex items-center gap-2 text-white dark:text-foreground">
+          <Camera className="text-nexacore-teal dark:text-primary" size={20} />
           Face Analysis
         </CardTitle>
-        <CardDescription className="text-white/70">
-          Analyze facial expressions using AI
+        <CardDescription className="text-white/70 dark:text-muted-foreground">
+          Analyze facial expressions and wellness metrics using AI
         </CardDescription>
       </CardHeader>
       
@@ -239,26 +295,39 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
               <img 
                 src={image} 
                 alt="Captured" 
-                className="rounded-lg max-h-64 border border-white/20"
+                className="rounded-lg max-h-64 border border-white/20 dark:border-border"
               />
               <Button
                 size="sm"
                 variant="outline"
-                className="absolute top-2 right-2 border-white/20 text-white hover:bg-white/10"
+                className="absolute top-2 right-2 border-white/20 text-white hover:bg-white/10 dark:border-border dark:text-foreground dark:hover:bg-foreground/10"
                 onClick={resetAnalysis}
               >
                 <RefreshCw className="h-4 w-4 mr-1" /> Reset
               </Button>
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative w-full max-w-[320px]">
+              {cameraError && (
+                <div className="absolute inset-0 flex items-center justify-center flex-col bg-red-900/20 rounded-lg border border-red-500/50 text-white p-4 z-10">
+                  <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
+                  <p className="text-center text-sm">{cameraError}</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2 border-white/20 text-white"
+                    onClick={() => setCameraError(null)}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              )}
               <video 
                 ref={videoRef}
                 autoPlay 
                 playsInline
                 muted
-                className="rounded-lg border border-white/20 max-h-64 bg-black/40"
-                style={{ width: "320px", height: "240px" }}
+                className="rounded-lg border border-white/20 bg-black/40 w-full h-[240px] object-cover dark:border-border"
               />
               <canvas ref={canvasRef} className="hidden" />
             </div>
@@ -269,7 +338,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
           <div className="flex gap-4 justify-center">
             <Button
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-white/20 text-white hover:bg-white/10 dark:border-border dark:text-foreground dark:hover:bg-foreground/10"
               onClick={startCamera}
               disabled={isCameraActive}
             >
@@ -279,7 +348,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
             
             <Button
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-white/20 text-white hover:bg-white/10 dark:border-border dark:text-foreground dark:hover:bg-foreground/10"
               onClick={() => fileInputRef.current?.click()}
             >
               <Download className="mr-2 h-4 w-4" />
@@ -298,7 +367,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         {isCameraActive && (
           <div className="flex justify-center">
             <Button
-              className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90"
+              className="bg-nexacore-teal text-nexacore-blue-dark hover:bg-nexacore-teal/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
               onClick={captureImage}
             >
               Capture
@@ -308,60 +377,95 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         
         {isAnalyzing && (
           <div className="text-center py-4">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-nexacore-teal motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-nexacore-teal dark:text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
               <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
             </div>
-            <p className="mt-2 text-white/70">Analyzing face...</p>
+            <p className="mt-2 text-white/70 dark:text-muted-foreground">Analyzing face...</p>
           </div>
         )}
         
         {analysisResults && (
-          <div className="mt-4 p-4 bg-white/10 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2 text-white">Analysis Results</h3>
+          <div className="mt-4 p-4 bg-white/10 dark:bg-foreground/5 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2 text-white dark:text-foreground">Analysis Results</h3>
             
             <div className="grid grid-cols-2 gap-2 mb-4">
               <div>
-                <p className="text-white/70">Age:</p>
-                <p className="text-white font-medium">{analysisResults.age} years</p>
+                <p className="text-white/70 dark:text-muted-foreground">Age:</p>
+                <p className="text-white font-medium dark:text-foreground">{analysisResults.age} years</p>
               </div>
               <div>
-                <p className="text-white/70">Gender:</p>
-                <p className="text-white font-medium">{analysisResults.gender.charAt(0).toUpperCase() + analysisResults.gender.slice(1)} ({(Number(analysisResults.genderProbability) * 100).toFixed(0)}%)</p>
+                <p className="text-white/70 dark:text-muted-foreground">Gender:</p>
+                <p className="text-white font-medium dark:text-foreground">{analysisResults.gender.charAt(0).toUpperCase() + analysisResults.gender.slice(1)} ({(Number(analysisResults.genderProbability) * 100).toFixed(0)}%)</p>
               </div>
             </div>
             
             <div className="mb-4">
-              <p className="text-white/70 mb-2">Dominant Emotion:</p>
-              <Badge className="bg-nexacore-teal text-nexacore-blue-dark font-medium">
+              <p className="text-white/70 mb-2 dark:text-muted-foreground">Dominant Emotion:</p>
+              <Badge className="bg-nexacore-teal text-nexacore-blue-dark font-medium dark:bg-primary dark:text-primary-foreground">
                 {analysisResults.dominantExpression.charAt(0).toUpperCase() + analysisResults.dominantExpression.slice(1)}
               </Badge>
             </div>
             
-            <div className="mb-4">
-              <p className="text-white/70 mb-2">Expression Analysis:</p>
-              <div className="space-y-2">
-                {Object.entries(analysisResults.expressions).map(([expression, probability]: [string, any]) => (
-                  <div key={expression} className="flex items-center">
-                    <span className="text-white/80 text-sm w-24">{expression.charAt(0).toUpperCase() + expression.slice(1)}:</span>
-                    <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-nexacore-teal rounded-full"
-                        style={{ width: `${Number(probability) * 100}%` }}
-                      ></div>
+            <Tabs defaultValue="expressions" className="w-full">
+              <TabsList className="grid grid-cols-3 mb-4 bg-white/5 dark:bg-foreground/5">
+                <TabsTrigger value="expressions" className="text-white dark:text-foreground">Expressions</TabsTrigger>
+                <TabsTrigger value="wellness" className="text-white dark:text-foreground">Wellness</TabsTrigger>
+                <TabsTrigger value="mental" className="text-white dark:text-foreground">Mental State</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="expressions" className="space-y-4 animate-fade-in">
+                <div className="space-y-2">
+                  {Object.entries(analysisResults.expressions).map(([expression, probability]: [string, any]) => (
+                    <div key={expression} className="flex items-center">
+                      <span className="text-white/80 text-sm w-24 dark:text-foreground/80">{expression.charAt(0).toUpperCase() + expression.slice(1)}:</span>
+                      <div className="flex-1 h-2 bg-white/20 dark:bg-foreground/20 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-nexacore-teal dark:bg-primary rounded-full"
+                          style={{ width: `${Number(probability) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-white/80 text-sm ml-2 w-10 dark:text-foreground/80">
+                        {(Number(probability) * 100).toFixed(0)}%
+                      </span>
                     </div>
-                    <span className="text-white/80 text-sm ml-2 w-10">
-                      {(Number(probability) * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="wellness" className="space-y-4 animate-fade-in">
+                <div className="space-y-3">
+                  {Object.entries(analysisResults.wellness).map(([metric, value]) => (
+                    <div key={metric} className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/80 text-sm capitalize dark:text-foreground/80">{metric}:</span>
+                        <span className="text-white/80 text-sm dark:text-foreground/80">{value}%</span>
+                      </div>
+                      <Progress value={value} className="h-2" />
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="mental" className="space-y-4 animate-fade-in">
+                <div className="space-y-3">
+                  {Object.entries(analysisResults.mentalState).map(([state, value]) => (
+                    <div key={state} className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/80 text-sm capitalize dark:text-foreground/80">{state}:</span>
+                        <span className="text-white/80 text-sm dark:text-foreground/80">{value}%</span>
+                      </div>
+                      <Progress value={value} className="h-2" />
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </CardContent>
       
       <CardFooter>
-        <p className="text-xs text-white/50">
+        <p className="text-xs text-white/50 dark:text-muted-foreground">
           This analysis uses facial recognition AI and is for demonstration purposes only. Data privacy is maintained as processing occurs locally in your browser.
         </p>
       </CardFooter>

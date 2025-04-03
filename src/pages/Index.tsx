@@ -6,6 +6,7 @@ import Features from "@/components/Features";
 import UserFlow from "@/components/UserFlow";
 import AuthSection from "@/components/AuthSection";
 import Footer from "@/components/Footer";
+import Testimonials from "@/components/Testimonials";
 
 const Index = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -59,6 +60,14 @@ const Index = () => {
       rotate: "-rotate-3",
       delay: "delay-200",
       opacityValue: "10"
+    },
+    {
+      src: "/lovable-uploads/067333f5-c8c6-49f4-94d9-e5c28cd8f5ff.png",
+      alt: "NexaCore Banner",
+      position: "top-1/3 left-1/2 -translate-x-1/2 w-[700px] opacity-20",
+      rotate: "rotate-0",
+      delay: "delay-150",
+      opacityValue: "30"
     }
   ];
 
@@ -67,13 +76,13 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-nexacore-blue-dark overflow-hidden relative">
-      {/* Decorative floating images */}
+    <div className="min-h-screen bg-nexacore-blue-dark dark:bg-background overflow-hidden relative">
+      {/* Decorative floating images with animation */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         {images.map((img, index) => (
           <div 
             key={index} 
-            className={`absolute ${img.position} ${img.rotate} ${img.delay} transform transition-all duration-1000 ease-in-out`}
+            className={`absolute ${img.position} ${img.rotate} ${img.delay} transform transition-all duration-1000 ease-in-out hover:scale-105`}
             style={{ 
               opacity: isLoaded ? Number("0." + img.opacityValue) : 0,
               transform: `${img.rotate} ${isLoaded ? 'translateY(0)' : 'translateY(20px)'}`,
@@ -82,14 +91,14 @@ const Index = () => {
             <img 
               src={img.src} 
               alt={img.alt} 
-              className="w-full h-auto rounded-lg shadow-2xl"
+              className="w-full h-auto rounded-lg shadow-2xl transition-all duration-500 hover:shadow-nexacore-teal/30 hover:scale-105"
             />
           </div>
         ))}
       </div>
       
       {/* Animated gradient overlay */}
-      <div className="fixed inset-0 bg-gradient-to-br from-nexacore-blue-dark/90 via-nexacore-blue-dark/70 to-nexacore-blue-dark/90 z-0"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-nexacore-blue-dark/90 via-nexacore-blue-dark/70 to-nexacore-blue-dark/90 dark:from-background/95 dark:via-background/80 dark:to-background/95 z-0"></div>
       
       {/* Main content */}
       <div className={`relative z-10 transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -97,6 +106,7 @@ const Index = () => {
         <Hero />
         <Features />
         <UserFlow />
+        <Testimonials />
         <AuthSection />
         <Footer />
       </div>

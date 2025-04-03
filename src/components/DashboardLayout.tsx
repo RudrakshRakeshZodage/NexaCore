@@ -16,11 +16,11 @@ import {
   X,
   ChevronRight,
   Sun,
-  Moon
+  Moon,
+  MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -38,18 +38,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     navigate("/");
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Education", path: "/education", icon: <BookOpen size={20} /> },
     { name: "Health", path: "/health", icon: <Heart size={20} /> },
     { name: "Finance", path: "/finance", icon: <PieChart size={20} /> },
     { name: "Reports", path: "/reports", icon: <FileText size={20} /> },
+    { name: "Attendance", path: "/attendance", icon: <MapPin size={20} /> },
     { name: "Profile", path: "/profile", icon: <User size={20} /> },
     { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-nexacore-blue to-nexacore-blue-dark dark:from-background dark:to-background text-white dark:text-foreground flex">
+    <div className="min-h-screen bg-gradient-to-b from-nexacore-blue to-nexacore-blue-dark dark:from-background dark:to-background/95 text-white dark:text-foreground flex">
       {/* Mobile sidebar toggle */}
       <button
         className="md:hidden fixed top-4 left-4 z-50 bg-nexacore-blue-dark/80 dark:bg-background/80 p-2 rounded-md"
@@ -67,7 +72,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       >
         {/* Logo */}
         <div className="p-4 border-b border-white/10 dark:border-border">
-          <Link to="/dashboard">
+          <Link to="/dashboard" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-nexacore-teal/20 dark:bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-nexacore-teal dark:text-primary font-bold">N</span>
+            </div>
             <h1 className="text-2xl font-bold text-gradient">NexaCore</h1>
           </Link>
         </div>
@@ -93,7 +101,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center px-3 py-2 rounded-md transition-colors",
+                    "flex items-center px-3 py-2 rounded-md transition-all duration-200",
                     location.pathname === item.path
                       ? "bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background font-medium"
                       : "hover:bg-white/10 dark:hover:bg-foreground/10"
@@ -114,7 +122,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="absolute bottom-0 w-full p-4 border-t border-white/10 dark:border-border">
           <div className="flex justify-between items-center mb-4">
             <span className="text-sm">Theme</span>
-            <ThemeToggle />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-8 w-8 rounded-full border-white/20 dark:border-foreground/20"
+            >
+              {theme === "dark" ? (
+                <Sun size={16} className="text-white dark:text-foreground" />
+              ) : (
+                <Moon size={16} className="text-white dark:text-foreground" />
+              )}
+            </Button>
           </div>
           <Button
             variant="outline"
