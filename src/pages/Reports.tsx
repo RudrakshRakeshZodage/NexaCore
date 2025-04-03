@@ -131,8 +131,7 @@ const Reports = () => {
       const { url, blob } = await generatePDFReport(
         reportData,
         type,
-        user?.name || "NexaCore User",
-        { includeTimestamp: true }
+        user?.name || "NexaCore User"
       );
       
       const reportText = generateReportPreviewText(type);
@@ -189,8 +188,7 @@ const Reports = () => {
         await downloadPDFReport(
           reportData,
           report.type,
-          user?.name || "NexaCore User",
-          { includeTimestamp: true }
+          user?.name || "NexaCore User"
         );
       }
       

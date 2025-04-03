@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -130,8 +129,7 @@ const Finance = () => {
       await downloadPDFReport(
         financeData, 
         'finance', 
-        'NexaCore User', 
-        { includeTimestamp: true }
+        'NexaCore User'
       );
       
       toast({

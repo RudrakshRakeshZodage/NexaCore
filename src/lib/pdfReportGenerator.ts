@@ -1,6 +1,5 @@
-
 import jsPDF from 'jspdf';
-import FileSize from 'filesize';
+import filesize from 'filesize';
 import { saveAs } from 'file-saver';
 
 // Types
@@ -435,6 +434,19 @@ const addComprehensiveContent = (doc: jsPDF, allData: any, startY: number) => {
 /**
  * Download a generated PDF report
  */
-export const downloadPDFReport = (pdfUrl: string, fileName: string = "nexacore_report.pdf") => {
-  saveAs(pdfUrl, fileName);
+export const downloadPDFReport = async (
+  data: any,
+  reportType: "education" | "health" | "finance" | "comprehensive",
+  userName: string = "User",
+  options: PDFReportOptions = {}
+) => {
+  try {
+    const { blob, url } = await generatePDFReport(data, reportType, userName, options);
+    const fileName = `nexacore_${reportType}_report.pdf`;
+    saveAs(blob, fileName);
+    return { success: true, fileName };
+  } catch (error) {
+    console.error("Error downloading PDF report:", error);
+    throw error;
+  }
 };
