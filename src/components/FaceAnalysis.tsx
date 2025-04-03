@@ -1,6 +1,3 @@
-
-// This file appears to have TypeScript errors in the expressions handling
-// We need to fix the types for the expressions array and improve type safety
 import React, { useState, useRef, useEffect } from 'react';
 import * as faceapi from '@vladmandic/face-api';
 import { Button } from "@/components/ui/button";
@@ -16,7 +13,11 @@ interface ExpressionState {
   expressions: Record<string, number>;
 }
 
-const FaceAnalysis = () => {
+interface FaceAnalysisProps {
+  onAnalysisComplete?: (results: ExpressionState) => void;
+}
+
+const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isVideoRunning, setIsVideoRunning] = useState(false);
@@ -25,6 +26,12 @@ const FaceAnalysis = () => {
     dominantExpression: '',
     expressions: {}
   });
+
+  useEffect(() => {
+    if (expressionResults.dominantExpression && onAnalysisComplete) {
+      onAnalysisComplete(expressionResults);
+    }
+  }, [expressionResults, onAnalysisComplete]);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -252,4 +259,3 @@ const FaceAnalysis = () => {
 };
 
 export default FaceAnalysis;
-
