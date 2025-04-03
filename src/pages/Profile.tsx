@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useFirebase } from "@/context/FirebaseContext";
 import { 
   User, 
   Mail, 
@@ -10,7 +11,7 @@ import {
   MapPin, 
   Briefcase, 
   Edit, 
-  Save, 
+  Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,15 +21,17 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ProfilePhotoUpload from "@/components/ProfilePhotoUpload";
 import ChatbotScript from "@/components/ChatbotScript";
 import { motion } from "framer-motion";
+import EmailProfile from "@/components/EmailProfile";
 
 const Profile = () => {
   const { user } = useAuth();
+  const { user: firebaseUser } = useFirebase();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [profileData, setProfileData] = useState({
-    name: user?.name || "User",
-    email: user?.email || "user@example.com",
+    name: user?.name || firebaseUser?.displayName || "User",
+    email: user?.email || firebaseUser?.email || "user@example.com",
     phone: "+91 9876543210",
     birthdate: "1998-06-15",
     address: "Pune, Maharashtra, India",
@@ -120,6 +123,7 @@ const Profile = () => {
                           value={profileData.email} 
                           onChange={(e) => setProfileData({...profileData, email: e.target.value})}
                           className="bg-white/10 border-white/20 text-white" 
+                          readOnly
                         />
                       ) : (
                         <p className="text-white/90 p-2 bg-white/5 rounded-md">{profileData.email}</p>
@@ -206,6 +210,9 @@ const Profile = () => {
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Email Profile Component */}
+            <EmailProfile email={profileData.email} />
           </div>
 
           <div className="space-y-6">
@@ -249,6 +256,10 @@ const Profile = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-white/70">Reports Generated</span>
                       <span className="text-white font-medium">12</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/70">Email Status</span>
+                      <span className="text-white font-medium text-green-400">Verified</span>
                     </div>
                   </div>
                 </CardContent>
