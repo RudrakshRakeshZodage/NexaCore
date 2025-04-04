@@ -38,7 +38,7 @@ const Hero = () => {
             Your intelligent companion for education, health, and financial management with AI-powered insights
           </p>
           <div className="flex flex-col md:flex-row justify-center gap-4 mb-16">
-            <Link to="/signup">
+            <Link to="/login-selection">
               <Button size="lg" className={theme === 'dark'
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                 : 'bg-nexacore-teal text-white hover:bg-nexacore-teal/90'}>
@@ -48,18 +48,60 @@ const Hero = () => {
           </div>
         </motion.div>
         
-        {/* Featured Image */}
+        {/* Three Images with Animation */}
         <motion.div 
-          className="mt-12 flex justify-center"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
         >
-          <img 
-            src="/lovable-uploads/5a800046-950c-4d85-bcc4-6569b72ebeba.png" 
-            alt="Workspace setup with laptop, notebook, coffee and phone" 
-            className="w-full max-w-3xl rounded-lg shadow-2xl transform hover:scale-105 transition-all duration-500"
-          />
+          <motion.div 
+            className="overflow-hidden rounded-lg shadow-2xl"
+            whileHover={{ scale: 1.03, rotate: -1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <img 
+              src="/lovable-uploads/b154ac24-a418-44be-ae17-23e35c7799f8.png" 
+              alt="Education concept with book and light bulb" 
+              className="w-full h-56 object-cover"
+            />
+            <div className="p-4 bg-white dark:bg-gray-800">
+              <h3 className="font-semibold text-lg">Education</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Smart learning tools and resources</p>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="overflow-hidden rounded-lg shadow-2xl"
+            whileHover={{ scale: 1.03 }}
+            transition={{ duration: 0.3 }}
+          >
+            <img 
+              src="/lovable-uploads/b2d57b61-8471-471e-a60e-15490566662d.png" 
+              alt="Finance concept with calculator and documents" 
+              className="w-full h-56 object-cover"
+            />
+            <div className="p-4 bg-white dark:bg-gray-800">
+              <h3 className="font-semibold text-lg">Finance</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Intelligent financial management</p>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="overflow-hidden rounded-lg shadow-2xl"
+            whileHover={{ scale: 1.03, rotate: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <img 
+              src="/lovable-uploads/d14348ca-c15b-43b0-99eb-f67b82a0155a.png" 
+              alt="Health concept with healthy food and fitness equipment" 
+              className="w-full h-56 object-cover"
+            />
+            <div className="p-4 bg-white dark:bg-gray-800">
+              <h3 className="font-semibold text-lg">Health</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Wellness tracking and analysis</p>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
       

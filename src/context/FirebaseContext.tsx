@@ -7,7 +7,9 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  GoogleAuthProvider, 
+  signInWithPopup
 } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
 import { FirebaseStorage } from 'firebase/storage';
@@ -25,6 +27,7 @@ type FirebaseContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   logOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 };
 
 // Create the context
@@ -55,6 +58,12 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     await createUserWithEmailAndPassword(auth, email, password);
   };
 
+  // Sign in with Google function
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  };
+
   // Log out function
   const logOut = async () => {
     await signOut(auth);
@@ -75,7 +84,8 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     signIn,
     signUp,
     logOut,
-    resetPassword
+    resetPassword,
+    signInWithGoogle
   };
 
   return (

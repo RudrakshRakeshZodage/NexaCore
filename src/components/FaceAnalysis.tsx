@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import * as faceapi from '@vladmandic/face-api';
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
           detectFace();
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error accessing webcam:", error);
       toast({
         title: "Webcam access denied",
@@ -231,6 +232,20 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
               <p className="text-white text-center">
                 Dominant Expression: <span className="font-bold text-nexacore-teal">{expressionResults.dominantExpression}</span>
               </p>
+            </div>
+          )}
+          
+          {Object.entries(expressionResults.expressions).length > 0 && (
+            <div className="col-span-2 bg-white/5 p-3 rounded-md mt-2">
+              <p className="text-white text-sm mb-2">All Expressions:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(expressionResults.expressions).map(([expression, value]) => (
+                  <div key={expression} className="flex justify-between">
+                    <span className="text-white/80 capitalize">{expression}:</span>
+                    <span className="text-nexacore-teal">{(value * 100).toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

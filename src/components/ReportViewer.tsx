@@ -12,6 +12,7 @@ interface ReportViewerProps {
   onClose?: () => void;
   className?: string;
   autoDownload?: boolean;
+  faceAnalysis?: any;
 }
 
 const ReportViewer: React.FC<ReportViewerProps> = ({
@@ -21,7 +22,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({
   timestamp = new Date().toLocaleString(),
   onClose,
   className = '',
-  autoDownload = false
+  autoDownload = false,
+  faceAnalysis
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   
@@ -91,6 +93,27 @@ const ReportViewer: React.FC<ReportViewerProps> = ({
       <CardContent className="max-h-[60vh] overflow-y-auto">
         <div className="bg-white/5 p-4 rounded-lg">
           {formatReportText(reportText)}
+          
+          {/* Render Face Analysis Results if available */}
+          {faceAnalysis && faceAnalysis.dominantExpression && (
+            <div className="mt-6 mb-4">
+              <h3 className="text-lg font-semibold mt-3 text-white">Face Analysis Results</h3>
+              <div className="mt-2 p-3 bg-nexacore-teal/10 rounded-md">
+                <p className="font-medium">Dominant Emotion: <span className="text-nexacore-teal">{faceAnalysis.dominantExpression}</span></p>
+                
+                {faceAnalysis.expressions && Object.keys(faceAnalysis.expressions).length > 0 && (
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {Object.entries(faceAnalysis.expressions).map(([key, value]: [string, any]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="capitalize text-white/80">{key}: </span>
+                        <span className="text-nexacore-teal">{(value * 100).toFixed(1)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
       

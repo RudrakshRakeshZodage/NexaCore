@@ -50,12 +50,6 @@ const Navbar = () => {
           <Link to="/" className="text-white dark:text-foreground hover:text-nexacore-teal dark:hover:text-primary transition">
             Home
           </Link>
-          <Link to="#features" className="text-white dark:text-foreground hover:text-nexacore-teal dark:hover:text-primary transition">
-            Features
-          </Link>
-          <Link to="#flow" className="text-white dark:text-foreground hover:text-nexacore-teal dark:hover:text-primary transition">
-            User Flow
-          </Link>
           
           <ThemeToggle />
           
@@ -78,12 +72,12 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/login">
+                <Link to="/login-selection">
                   <Button variant="outline" className="border-nexacore-teal dark:border-primary text-white dark:text-foreground hover:bg-nexacore-teal/20 dark:hover:bg-primary/20">
                     Login
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/login-selection">
                   <Button className="bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90">
                     Sign Up
                   </Button>
@@ -116,20 +110,6 @@ const Navbar = () => {
             >
               Home
             </Link>
-            <Link
-              to="#features"
-              className="text-white dark:text-foreground hover:text-nexacore-teal dark:hover:text-primary transition py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Features
-            </Link>
-            <Link
-              to="#flow"
-              className="text-white dark:text-foreground hover:text-nexacore-teal dark:hover:text-primary transition py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              User Flow
-            </Link>
             <div className="flex flex-col gap-3 py-2">
               {isAuthenticated ? (
                 <>
@@ -155,12 +135,12 @@ const Navbar = () => {
                 </>
               ) : (
                 <>
-                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link to="/login-selection" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full border-nexacore-teal dark:border-primary text-white dark:text-foreground hover:bg-nexacore-teal/20 dark:hover:bg-primary/20">
                       Login
                     </Button>
                   </Link>
-                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link to="/login-selection" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full bg-nexacore-teal dark:bg-primary text-nexacore-blue-dark dark:text-background hover:bg-nexacore-teal-light dark:hover:bg-primary/90">
                       Sign Up
                     </Button>

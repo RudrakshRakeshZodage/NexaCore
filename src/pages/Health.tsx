@@ -293,6 +293,41 @@ const Health = () => {
               transition={{ duration: 0.5 }}
             >
               <FaceAnalysis onAnalysisComplete={handleFaceAnalysisComplete} />
+              
+              {faceAnalysisResults && (
+                <Card className="mt-4 bg-nexacore-blue-dark/50 border-white/10">
+                  <CardHeader>
+                    <CardTitle className="text-white">Analysis Results</CardTitle>
+                    <CardDescription className="text-white/70">
+                      Your current emotional state based on facial analysis
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-white/5 p-4 rounded-md">
+                      <h3 className="text-xl font-semibold text-nexacore-teal mb-4">
+                        Dominant Emotion: {faceAnalysisResults.dominantExpression}
+                      </h3>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(faceAnalysisResults.expressions).map(([expression, value]: [string, any]) => (
+                          <div key={expression} className="flex justify-between items-center">
+                            <span className="text-white/80 capitalize">{expression}:</span>
+                            <div className="w-2/3 bg-white/10 rounded-full h-2.5">
+                              <div 
+                                className="bg-nexacore-teal h-2.5 rounded-full" 
+                                style={{ width: `${value * 100}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-nexacore-teal ml-2 w-16 text-right">
+                              {(value * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </motion.div>
           </TabsContent>
 
