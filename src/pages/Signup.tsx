@@ -1,11 +1,12 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useFirebase } from "../context/FirebaseContext";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +15,7 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const auth = getAuth();
+  const { signUp, signInWithGoogle } = useFirebase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +32,7 @@ const Signup = () => {
     setLoading(true);
     
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await signUp(email, password);
       toast({
         title: "Account created",
         description: "Welcome to NexaCore!",
@@ -50,10 +51,9 @@ const Signup = () => {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const provider = new GoogleAuthProvider();
     
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithGoogle();
       toast({
         title: "Account created",
         description: "Welcome to NexaCore!",

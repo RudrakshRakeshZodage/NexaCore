@@ -1,11 +1,12 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useFirebase } from "../context/FirebaseContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,14 +14,14 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const auth = getAuth();
+  const { signIn, signInWithGoogle } = useFirebase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signIn(email, password);
       toast({
         title: "Login successful",
         description: "Welcome back to NexaCore!",
@@ -39,10 +40,9 @@ const Login = () => {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const provider = new GoogleAuthProvider();
     
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithGoogle();
       toast({
         title: "Login successful",
         description: "Welcome to NexaCore!",
