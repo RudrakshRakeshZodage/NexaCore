@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { detectFaces, loadFaceApiModels, processExpressionsToWellnessMetrics } from '@/lib/faceApiModelLoader';
+import { detectFaces, loadFaceApiModels, processExpressionsToWellnessMetrics, ExpressionMap } from '@/lib/faceApiModelLoader';
 import { WellnessMetric, wellnessMetricsInsights, getMetricCategory, formatMetricName, getMetricColor, getProgressColor } from '@/lib/wellnessInsightsGenerator';
 
 interface SelfieAnalysisProps {
@@ -186,7 +186,7 @@ const SelfieAnalysis: React.FC<SelfieAnalysisProps> = ({ onAnalysisComplete }) =
       
       // Process the first face detected
       setLoadingMessage("Processing wellness metrics...");
-      const faceExpressions = detections[0].expressions;
+      const faceExpressions = detections[0].expressions as ExpressionMap;
       const wellnessMetrics = processExpressionsToWellnessMetrics(faceExpressions);
       
       // Add a slight delay to make the analysis feel more substantial

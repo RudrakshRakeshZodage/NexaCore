@@ -105,8 +105,20 @@ export const detectFaces = async (imageElement: HTMLImageElement | HTMLVideoElem
   */
 };
 
+// Define a type for facial expressions that matches what we use
+export interface ExpressionMap {
+  neutral: number;
+  happy: number;
+  sad: number;
+  angry: number;
+  fearful: number;
+  disgusted: number;
+  surprised: number;
+  [key: string]: number; // Allow for additional expressions
+}
+
 // Process expressions to wellness metrics
-export const processExpressionsToWellnessMetrics = (expressions: faceapi.FaceExpressions) => {
+export const processExpressionsToWellnessMetrics = (expressions: ExpressionMap | faceapi.FaceExpressions) => {
   // Convert raw expressions to wellness metrics
   return {
     // Mental state metrics
