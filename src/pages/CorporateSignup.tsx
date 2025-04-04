@@ -73,14 +73,15 @@ const CorporateSignup = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-blue-100 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-[url('/lovable-uploads/067333f5-c8c6-49f4-94d9-e5c28cd8f5ff.png')] bg-cover bg-center bg-fixed p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        <Card className="border-blue-200 shadow-lg">
+        <Card className="border-blue-200/30 shadow-xl bg-white/90 backdrop-blur">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create Corporate Account</CardTitle>
             <CardDescription className="text-center">

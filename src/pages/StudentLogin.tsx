@@ -61,18 +61,19 @@ const StudentLogin = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-[url('/lovable-uploads/b2d57b61-8471-471e-a60e-15490566662d.png')] bg-cover bg-center bg-fixed p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        <Card className="border-green-200 shadow-lg">
+        <Card className="border-blue-200/30 shadow-xl bg-white/90 backdrop-blur">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Student Login</CardTitle>
             <CardDescription className="text-center">
-              Enter your student credentials to access your learning platform
+              Enter your credentials to access your student account
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -12,7 +12,7 @@ const StudentSignup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [studentName, setStudentName] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ const StudentSignup = () => {
     setLoading(true);
 
     try {
-      await signup(fullName, email, password);
+      await signup(studentName, email, password);
       toast({
         title: "Account created",
         description: "Welcome to NexaCore! You're now signed in.",
@@ -73,14 +73,15 @@ const StudentSignup = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-[url('/lovable-uploads/b154ac24-a418-44be-ae17-23e35c7799f8.png')] bg-cover bg-center bg-fixed p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        <Card className="border-green-200 shadow-lg">
+        <Card className="border-blue-200/30 shadow-xl bg-white/90 backdrop-blur">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create Student Account</CardTitle>
             <CardDescription className="text-center">
@@ -90,13 +91,13 @@ const StudentSignup = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="fullName" className="text-sm font-medium">Full Name</label>
+                <label htmlFor="studentName" className="text-sm font-medium">Full Name</label>
                 <Input
-                  id="fullName"
+                  id="studentName"
                   type="text"
                   placeholder="Your Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
                   required
                 />
               </div>
