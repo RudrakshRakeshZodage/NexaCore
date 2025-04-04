@@ -12,12 +12,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, FileText } from "lucide-react";
 import { downloadPDFReport } from "@/lib/pdfReportGenerator";
 import FaceAnalysis from "@/components/FaceAnalysis";
+import SelfieAnalysis from "@/components/SelfieAnalysis";
 import ChatbotScript from "@/components/ChatbotScript";
 import { motion } from "framer-motion";
 
 const Health = () => {
   const { toast } = useToast();
   const [faceAnalysisResults, setFaceAnalysisResults] = useState<any>(null);
+  const [selfieAnalysisResults, setSelfieAnalysisResults] = useState<any>(null);
   
   // Physical metrics
   const [height, setHeight] = useState("");
@@ -43,6 +45,15 @@ const Health = () => {
     toast({
       title: "Emotion Analysis Complete",
       description: `Your dominant emotion is detected as ${results.dominantExpression}`,
+    });
+  };
+
+  const handleSelfieAnalysisComplete = (results: any) => {
+    setSelfieAnalysisResults(results);
+    
+    toast({
+      title: "Wellness Analysis Complete",
+      description: "Your facial analysis has been processed successfully",
     });
   };
 
@@ -78,6 +89,7 @@ const Health = () => {
         },
         goals: healthGoals,
         faceAnalysis: faceAnalysisResults,
+        selfieAnalysis: selfieAnalysisResults,
       };
       
       const pdfResult = await downloadPDFReport(
@@ -142,13 +154,25 @@ const Health = () => {
           </div>
         </motion.div>
 
-        <Tabs defaultValue="metrics" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-8">
+        <Tabs defaultValue="wellness" className="w-full">
+          <TabsList className="grid grid-cols-5 mb-8">
+            <TabsTrigger value="wellness">Wellness Analysis</TabsTrigger>
             <TabsTrigger value="metrics">Physical Metrics</TabsTrigger>
             <TabsTrigger value="lifestyle">Lifestyle</TabsTrigger>
             <TabsTrigger value="analysis">Face Analysis</TabsTrigger>
             <TabsTrigger value="medical">Medical</TabsTrigger>
           </TabsList>
+
+          {/* Wellness Analysis Tab */}
+          <TabsContent value="wellness" className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <SelfieAnalysis onAnalysisComplete={handleSelfieAnalysisComplete} />
+            </motion.div>
+          </TabsContent>
 
           {/* Physical Metrics Tab */}
           <TabsContent value="metrics" className="space-y-4">

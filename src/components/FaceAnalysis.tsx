@@ -4,6 +4,7 @@ import * as faceapi from '@vladmandic/face-api';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { FACE_API_MODEL_PATH, loadFaceApiModels } from '@/lib/faceApiModelLoader';
 
 // Define proper types for expressions
 type Expression = "neutral" | "happy" | "sad" | "angry" | "fearful" | "disgusted" | "surprised";
@@ -36,13 +37,10 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
   }, [expressionResults, onAnalysisComplete]);
 
   useEffect(() => {
-    const loadModels = async () => {
+    const initializeModels = async () => {
       try {
-        // Load the face-api models
-        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-        await faceapi.nets.faceExpressionNet.loadFromUri('/models');
+        // Load the face-api models using our utility
+        await loadFaceApiModels();
         setIsModelLoaded(true);
         console.log("Face API models loaded successfully");
       } catch (error) {
@@ -55,7 +53,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
       }
     };
 
-    loadModels();
+    initializeModels();
 
     // Clean up video on component unmount
     return () => {
