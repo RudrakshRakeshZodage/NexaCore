@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
-import { DashboardLayout } from '@/components/DashboardLayout';
-import { AttendanceTracker } from '@/components/AttendanceTracker';
+import DashboardLayout from '@/components/DashboardLayout';
+import AttendanceTracker from '@/components/AttendanceTracker';
 
 type Attendance = {
   id: string;
@@ -101,7 +101,7 @@ const AttendancePage = () => {
           if (record.id === existingRecord.id) {
             return {
               ...record,
-              status: 'present',
+              status: 'present' as const,
               checkInTime: formattedTime
             };
           }
@@ -112,7 +112,7 @@ const AttendancePage = () => {
           {
             id: String(attendance.length + 1),
             date: today,
-            status: 'present',
+            status: 'present' as const,
             checkInTime: formattedTime
           }
         ];
