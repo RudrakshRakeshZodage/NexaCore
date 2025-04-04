@@ -9,7 +9,9 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   GoogleAuthProvider, 
-  signInWithPopup
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
 import { FirebaseStorage } from 'firebase/storage';
@@ -45,6 +47,20 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
       setLoading(false);
     });
 
+    // Check for redirect result on initial load (for Google auth)
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          setUser(result.user);
+        }
+      } catch (error) {
+        console.error("Redirect result error:", error);
+      }
+    };
+    
+    checkRedirectResult();
+
     return () => unsubscribe();
   }, []);
 
@@ -61,7 +77,15 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Sign in with Google function
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
+    try {
+      // Using popup method as it works better in more browsers
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      throw error;
+    }
   };
 
   // Log out function

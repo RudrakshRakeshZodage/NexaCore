@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ const Login = () => {
       });
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Email/password login error:", error);
       toast({
         title: "Login failed",
         description: error.message,
@@ -49,6 +49,7 @@ const Login = () => {
       });
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Google login error:", error);
       toast({
         title: "Google sign-in failed",
         description: error.message,
@@ -115,6 +116,7 @@ const Login = () => {
             className="w-full mt-4 flex items-center justify-center gap-2"
             onClick={handleGoogleSignIn}
             disabled={loading}
+            type="button"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
               <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
