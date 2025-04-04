@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,13 +12,11 @@ interface AttendanceRecord {
   status: 'present' | 'absent';
 }
 
-// Define the VIVA Institute location and allowed radius
 const VIVA_INSTITUTE_LOCATION = {
   latitude: 19.4615, // Approximate coordinates for VIVA Institute of Technology, Shirgaon
   longitude: 72.7933,
   address: "VIVA Institute of Technology, Shirgaon, Veer Sawarkar road, Tal, East, Chandansar, Virar, Vasai, Maharashtra 401305"
 };
-const ALLOWED_RADIUS_METERS = 300;
 
 const AttendanceTracker = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
@@ -33,27 +30,23 @@ const AttendanceTracker = () => {
   
   const today = new Date().toISOString().split('T')[0];
 
-  // Load saved attendance data from localStorage
   useEffect(() => {
     const savedRecords = localStorage.getItem('attendanceRecords');
     if (savedRecords) {
       const parsedRecords = JSON.parse(savedRecords);
       setAttendanceRecords(parsedRecords);
       
-      // Count today's attendance entries
       const todayEntries = parsedRecords.filter((record: AttendanceRecord) => record.date === today);
       setTodayAttendanceCount(todayEntries.length);
     }
   }, [today]);
 
-  // Save attendance data to localStorage when updated
   useEffect(() => {
     if (attendanceRecords.length > 0) {
       localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
     }
   }, [attendanceRecords]);
 
-  // Calculate distance between two geographical points using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Radius of the earth in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -68,7 +61,6 @@ const AttendanceTracker = () => {
     return distance;
   };
 
-  // Check if user is within the allowed radius of VIVA Institute
   const checkLocationPermission = () => {
     setLocationStatus('checking');
     
@@ -96,30 +88,21 @@ const AttendanceTracker = () => {
         
         setDistance(distanceToInstitute);
         
-        if (distanceToInstitute <= ALLOWED_RADIUS_METERS) {
-          setLocationStatus('allowed');
-          toast({
-            title: "Location verified",
-            description: `You are within ${Math.round(distanceToInstitute)}m of VIVA Institute`,
-          });
-        } else {
-          setLocationStatus('denied');
-          setShowLocationDialog(true);
-          toast({
-            title: "Location out of range",
-            description: `You need to be within 300m of VIVA Institute to mark attendance`,
-            variant: "destructive",
-          });
-        }
+        setLocationStatus('allowed');
+        toast({
+          title: "Location access granted",
+          description: `You are approximately ${Math.round(distanceToInstitute)}m from VIVA Institute`,
+        });
       },
       (error) => {
         console.error("Error getting location:", error);
         setLocationStatus('error');
         toast({
-          title: "Location error",
-          description: error.message || "Unable to get your location. Please enable location services.",
+          title: "Location permission denied",
+          description: "Please enable location services to mark attendance",
           variant: "destructive",
         });
+        setShowLocationDialog(true);
       }
     );
   };
@@ -134,17 +117,13 @@ const AttendanceTracker = () => {
       return;
     }
     
-    // First check location before marking attendance
-    checkLocationPermission();
-    
-    // Only proceed if location is allowed
-    if (locationStatus !== 'allowed' && locationStatus !== 'checking') {
+    if (locationStatus !== 'allowed') {
+      checkLocationPermission();
       return;
     }
     
     setLoading(true);
     
-    // Simulate API call
     setTimeout(() => {
       const now = new Date();
       const record: AttendanceRecord = {
@@ -200,19 +179,16 @@ const AttendanceTracker = () => {
                 <div>
                   <div className="text-white font-medium">VIVA Institute of Technology</div>
                   <div className="text-white/70 text-sm">Shirgaon, Virar, Maharashtra</div>
+                  <div className="text-nexacore-teal text-sm mt-1">
+                    Only GPS permission is required to mark attendance
+                  </div>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4 w-full">
                 <Button 
                   className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                  onClick={() => {
-                    setLocationStatus('checking');
-                    checkLocationPermission();
-                    if (locationStatus === 'allowed') {
-                      markAttendance('present');
-                    }
-                  }}
+                  onClick={() => markAttendance('present')}
                   disabled={loading || todayAttendanceCount >= 2}
                 >
                   <CheckCheck size={18} />
@@ -220,13 +196,7 @@ const AttendanceTracker = () => {
                 </Button>
                 <Button 
                   className="bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
-                  onClick={() => {
-                    setLocationStatus('checking');
-                    checkLocationPermission();
-                    if (locationStatus === 'allowed') {
-                      markAttendance('absent');
-                    }
-                  }}
+                  onClick={() => markAttendance('absent')}
                   disabled={loading || todayAttendanceCount >= 2}
                 >
                   <AlertCircle size={18} />
@@ -319,28 +289,29 @@ const AttendanceTracker = () => {
         </motion.div>
       </div>
       
-      {/* Location out of range dialog */}
       <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
         <DialogContent className="bg-nexacore-blue-dark/90 border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-white">Location Verification Failed</DialogTitle>
+            <DialogTitle className="text-white">Location Permission Required</DialogTitle>
             <DialogDescription className="text-white/70">
-              You need to be within 300 meters of VIVA Institute to mark attendance
+              You need to allow location access to mark attendance
             </DialogDescription>
           </DialogHeader>
           
           <div className="py-4">
             <div className="bg-white/10 p-4 rounded-lg">
-              <h3 className="text-nexacore-teal mb-2 font-medium">VIVA Institute of Technology</h3>
-              <p className="text-white/80 text-sm">{VIVA_INSTITUTE_LOCATION.address}</p>
+              <h3 className="text-nexacore-teal mb-2 font-medium">Why we need location access:</h3>
+              <p className="text-white/80 text-sm mb-3">
+                We use your location to verify your attendance at VIVA Institute. Your location data is only used for attendance verification and is not stored or shared.
+              </p>
               
-              {distance !== null && (
-                <div className="mt-4 text-red-400">
-                  You are {Math.round(distance)}m away from the institute.
-                  <br />
-                  Please move closer to mark your attendance.
-                </div>
-              )}
+              <h3 className="text-nexacore-teal mb-2 font-medium">How to enable location:</h3>
+              <ol className="text-white/80 text-sm space-y-1 list-decimal pl-5">
+                <li>Click on the lock/info icon in your browser's address bar</li>
+                <li>Find "Location" permissions</li>
+                <li>Select "Allow"</li>
+                <li>Refresh the page</li>
+              </ol>
             </div>
           </div>
           
