@@ -4,7 +4,7 @@ import * as faceapi from '@vladmandic/face-api';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { FACE_API_MODEL_PATH, loadFaceApiModels } from '@/lib/faceApiModelLoader';
+import { loadFaceApiModels } from '@/lib/faceApiModelLoader';
 
 // Define proper types for expressions
 type Expression = "neutral" | "happy" | "sad" | "angry" | "fearful" | "disgusted" | "surprised";
@@ -89,9 +89,12 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         setIsVideoRunning(true);
         
         // Start face detection once video is playing
-        videoRef.current.onplay = () => {
-          detectFace();
+        videoRef.current.onplay = async () => {
+          await detectFace();
         };
+
+        // Explicitly call detectFace to ensure it starts
+        await detectFace();
       }
     } catch (error: any) {
       console.error("Error accessing webcam:", error);
@@ -120,8 +123,8 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
     const canvas = canvasRef.current;
     
     // Set canvas dimensions to match video
-    canvas.width = video.width;
-    canvas.height = video.height;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
     const displaySize = { width: video.width, height: video.height };
     faceapi.matchDimensions(canvas, displaySize);
@@ -188,7 +191,17 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
       } catch (error) {
         console.error("Error during face detection:", error);
       }
-    }, 100); // Check every 100ms
+    }, 10); // Check every 100ms
+
+    return () => {
+      clearInterval(interval);
+      if (canvasRef.current) {
+        const context = canvasRef.current.getContext('2d');
+        if (context) {
+          context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+      }
+    };
 
     return () => clearInterval(interval);
   };
@@ -209,6 +222,11 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
             autoPlay
             muted
             playsInline
+            onLoadedMetadata={() => {
+              if (videoRef.current) {
+                videoRef.current.play();
+              }
+            }}
           />
           <canvas 
             ref={canvasRef}

@@ -1,13 +1,9 @@
-
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getFirestore } from "firebase/firestore"; // Import Firestore
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth"; // Import Authentication and GoogleAuthProvider, signInWithPopup
+import { getStorage } from "firebase/storage"; // Import Storage
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAwurFYyoCiHtsJ2BIKp4oWbyPDFTCJj60",
   authDomain: "nexacore-88acc.firebaseapp.com",
@@ -18,13 +14,24 @@ const firebaseConfig = {
   measurementId: "G-1NVR6J90R5"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase services
 const analytics = getAnalytics(app);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+const db = getFirestore(app); // Initialize Firestore
+const auth = getAuth(app); // Initialize Authentication
+const storage = getStorage(app); // Initialize Storage
 
-export { app, analytics, auth, db, storage };
+// Function to log in with Google
+const loginWithGoogle = async () => {
+  const provider = new GoogleAuthProvider(); // Create a GoogleAuthProvider instance
+  try {
+    const result = await signInWithPopup(auth, provider); // Sign in with a popup
+    const user = result.user; // Get the signed-in user information
+    console.log("User signed in:", user);
+    return user;
+  } catch (error) {
+    console.error("Error during Google login:", error);
+    throw error;
+  }
+};
+
+export { app, analytics, db, auth, storage, loginWithGoogle, getAuth }; // Export the loginWithGoogle function // Export the loginWithGoogle function
