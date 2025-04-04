@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { saveAs } from 'file-saver';
-import { Camera, QrCode, PlusCircle, Clock } from 'lucide-react';
+import { Camera, QrCode, PlusCircle, Clock, IndianRupee } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Transaction {
@@ -73,7 +73,7 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
     // Create a payment payload
     const payload = {
       amount: parseFloat(amount),
-      currency: 'USD',
+      currency: 'INR',
       method: paymentMethod,
       purpose: paymentPurpose,
       timestamp: new Date().toISOString(),
@@ -123,7 +123,7 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
       
       toast({
         title: 'Payment Successful',
-        description: `Your payment of $${paymentData.amount} has been processed successfully.`,
+        description: `Your payment of ₹${paymentData.amount} has been processed successfully.`,
       });
       
       // Reset form
@@ -163,8 +163,8 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
         setTimeout(() => {
           // Simulate finding a QR code after 3 seconds
           const mockPaymentData = {
-            amount: Math.floor(Math.random() * 100) + 10,
-            currency: 'USD',
+            amount: Math.floor(Math.random() * 5000) + 500,
+            currency: 'INR',
             method: 'wallet',
             purpose: 'service',
             timestamp: new Date().toISOString(),
@@ -197,7 +197,7 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
     const newTransaction: Transaction = {
       id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       amount: paymentData.amount,
-      currency: paymentData.currency || 'USD',
+      currency: paymentData.currency || 'INR',
       method: paymentData.method || 'scan',
       purpose: paymentData.purpose || 'payment',
       timestamp: new Date().toISOString(),
@@ -218,7 +218,7 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
     
     toast({
       title: 'QR Code Scanned',
-      description: `Payment of $${paymentData.amount} processed for ${paymentData.purpose}.`,
+      description: `Payment of ₹${paymentData.amount} processed for ${paymentData.purpose}.`,
     });
     
     // Switch to transaction history tab
@@ -232,8 +232,8 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
     // For demo purposes, simulate processing an uploaded QR image
     setTimeout(() => {
       const mockPaymentData = {
-        amount: Math.floor(Math.random() * 100) + 20,
-        currency: 'USD',
+        amount: Math.floor(Math.random() * 5000) + 1000,
+        currency: 'INR',
         method: 'card',
         purpose: 'donation',
         timestamp: new Date().toISOString(),
@@ -313,34 +313,33 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
             </div>
           ) : !showQR ? (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="amount" className="text-white">Amount (USD)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="Enter amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    min="0.01"
-                    step="0.01"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="payment-method" className="text-white">Payment Method</Label>
-                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <SelectTrigger id="payment-method" className="bg-white/10 border-white/20 text-white">
-                      <SelectValue placeholder="Select payment method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="wallet">Digital Wallet</SelectItem>
-                      <SelectItem value="bank">Bank Transfer</SelectItem>
-                      <SelectItem value="card">Credit/Debit Card</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="amount" className="text-white">Amount (₹)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  min="0.01"
+                  step="0.01"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="payment-method" className="text-white">Payment Method</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger id="payment-method" className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="wallet">Digital Wallet</SelectItem>
+                    <SelectItem value="bank">Bank Transfer</SelectItem>
+                    <SelectItem value="card">Credit/Debit Card</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">
@@ -408,7 +407,7 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
               </div>
               
               <div className="text-center">
-                <p className="text-white font-semibold mb-1">Amount: ${amount}</p>
+                <p className="text-white font-semibold mb-1">Amount: ₹{amount}</p>
                 <p className="text-white/70 text-sm">Scan this QR code to complete your payment</p>
               </div>
               
@@ -475,7 +474,7 @@ const QRCodePayment: React.FC<QRCodePaymentProps> = ({ onPaymentComplete }) => {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-medium text-white">
-                          ${transaction.amount.toFixed(2)} - {transaction.purpose.charAt(0).toUpperCase() + transaction.purpose.slice(1)}
+                          ₹{transaction.amount.toFixed(2)} - {transaction.purpose.charAt(0).toUpperCase() + transaction.purpose.slice(1)}
                         </p>
                         <p className="text-sm text-white/70">
                           {formatDate(transaction.timestamp)}
