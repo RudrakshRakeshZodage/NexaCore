@@ -2,126 +2,81 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Calendar, CheckCheck, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Calendar, Clock, UserCheck, AlertCircle } from "lucide-react";
 
-// Types
 interface AttendanceRecord {
-  id: string;
-  timestamp: Date;
-  status: 'present' | 'absent' | 'late';
+  date: string;
+  time: string;
+  status: 'present' | 'absent';
 }
 
-const AttendanceTracker: React.FC = () => {
-  const { toast } = useToast();
+const AttendanceTracker = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [attemptsToday, setAttemptsToday] = useState(0);
+  const [todayAttendanceCount, setTodayAttendanceCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  
+  const today = new Date().toISOString().split('T')[0];
 
-  // Load records from local storage on component mount
+  // Load saved attendance data from localStorage
   useEffect(() => {
-    const storedRecords = localStorage.getItem('attendanceRecords');
-    if (storedRecords) {
-      const parsedRecords = JSON.parse(storedRecords).map((record: any) => ({
-        ...record,
-        timestamp: new Date(record.timestamp)
-      }));
+    const savedRecords = localStorage.getItem('attendanceRecords');
+    if (savedRecords) {
+      const parsedRecords = JSON.parse(savedRecords);
       setAttendanceRecords(parsedRecords);
-    }
-    
-    // Check attempts for today
-    countAttemptsToday();
-  }, []);
-
-  // Count how many attempts were made today
-  const countAttemptsToday = () => {
-    const today = new Date().toDateString();
-    const storedRecords = localStorage.getItem('attendanceRecords');
-    
-    if (storedRecords) {
-      const parsedRecords = JSON.parse(storedRecords);
-      const todayAttempts = parsedRecords.filter(
-        (record: any) => new Date(record.timestamp).toDateString() === today
-      ).length;
       
-      setAttemptsToday(todayAttempts);
+      // Count today's attendance entries
+      const todayEntries = parsedRecords.filter((record: AttendanceRecord) => record.date === today);
+      setTodayAttendanceCount(todayEntries.length);
     }
-  };
+  }, [today]);
 
-  // Mark attendance
-  const markAttendance = (status: 'present' | 'absent' | 'late') => {
-    setLoading(true);
-    
-    // Check if already marked twice today
-    if (attemptsToday >= 2) {
+  // Save attendance data to localStorage when updated
+  useEffect(() => {
+    if (attendanceRecords.length > 0) {
+      localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+    }
+  }, [attendanceRecords]);
+
+  const markAttendance = (status: 'present' | 'absent') => {
+    if (todayAttendanceCount >= 2) {
       toast({
-        title: "Daily limit reached",
-        description: "You've already marked attendance twice today",
+        title: "Maximum attempts reached",
+        description: "You can only mark attendance twice per day",
         variant: "destructive",
       });
-      setLoading(false);
       return;
     }
     
+    setLoading(true);
+    
+    // Simulate API call
     setTimeout(() => {
-      const newRecord: AttendanceRecord = {
-        id: Date.now().toString(),
-        timestamp: new Date(),
+      const now = new Date();
+      const record: AttendanceRecord = {
+        date: today,
+        time: now.toLocaleTimeString(),
         status,
       };
       
-      const updatedRecords = [newRecord, ...attendanceRecords];
-      setAttendanceRecords(updatedRecords);
-      setAttemptsToday(attemptsToday + 1);
-      
-      // Save to local storage
-      localStorage.setItem('attendanceRecords', JSON.stringify(updatedRecords));
+      const newRecords = [record, ...attendanceRecords];
+      setAttendanceRecords(newRecords);
+      setTodayAttendanceCount(todayAttendanceCount + 1);
       
       toast({
-        title: "Attendance Recorded",
-        description: `You've been marked as ${status} for today`,
+        title: "Attendance recorded",
+        description: `You have been marked as ${status} at ${record.time}`,
+        variant: status === 'present' ? 'default' : 'destructive',
       });
       
       setLoading(false);
     }, 1000);
   };
 
-  // Format date for display
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  };
-
-  // Format time for display
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    }).format(date);
-  };
-
-  // Get the status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'present':
-        return 'text-green-500';
-      case 'late':
-        return 'text-yellow-500';
-      case 'absent':
-        return 'text-red-500';
-      default:
-        return 'text-gray-500';
-    }
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -130,48 +85,45 @@ const AttendanceTracker: React.FC = () => {
         <Card className="bg-nexacore-blue-dark/50 border-white/10">
           <CardHeader>
             <CardTitle className="text-white flex items-center">
-              <UserCheck className="mr-2 text-nexacore-teal" size={20} />
-              Mark Attendance
+              <Calendar className="mr-2 text-nexacore-teal" size={20} />
+              Today's Attendance
             </CardTitle>
             <CardDescription className="text-white/70">
-              Record your attendance for today ({attemptsToday}/2 attempts used)
+              {today} - Mark your attendance for today
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => markAttendance('present')}
-                disabled={loading || attemptsToday >= 2}
-              >
-                Mark Present
-              </Button>
-              <Button 
-                className="bg-yellow-600 hover:bg-yellow-700 text-white"
-                onClick={() => markAttendance('late')}
-                disabled={loading || attemptsToday >= 2}
-              >
-                Mark Late
-              </Button>
-              <Button 
-                className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={() => markAttendance('absent')}
-                disabled={loading || attemptsToday >= 2}
-              >
-                Mark Absent
-              </Button>
+          <CardContent className="flex flex-col items-center space-y-6">
+            <div className="w-full bg-white/5 p-4 rounded-lg text-center">
+              <div className="text-4xl font-bold text-white mb-2">
+                {todayAttendanceCount} / 2
+              </div>
+              <div className="text-white/70">
+                Attempts used today ({todayAttendanceCount >= 2 ? "Maximum reached" : "Attempts remaining"})
+              </div>
             </div>
             
-            {attemptsToday >= 2 && (
-              <div className="mt-4 p-3 bg-red-900/30 border border-red-800/50 rounded-md flex items-center">
-                <AlertCircle className="text-red-400 mr-2" size={18} />
-                <p className="text-white/90 text-sm">You've reached the maximum attendance attempts for today (2/2).</p>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-4 w-full">
+              <Button 
+                className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                onClick={() => markAttendance('present')}
+                disabled={loading || todayAttendanceCount >= 2}
+              >
+                <CheckCheck size={18} />
+                Present
+              </Button>
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                onClick={() => markAttendance('absent')}
+                disabled={loading || todayAttendanceCount >= 2}
+              >
+                <AlertCircle size={18} />
+                Absent
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -181,47 +133,63 @@ const AttendanceTracker: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-white">Attendance History</CardTitle>
             <CardDescription className="text-white/70">
-              Your attendance records
+              Your recent attendance records
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {attendanceRecords.length === 0 ? (
-              <div className="text-center py-8 text-white/70">
-                No attendance records yet
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                {attendanceRecords.map((record) => (
-                  <motion.div
-                    key={record.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="p-3 bg-white/5 rounded-md flex flex-col sm:flex-row sm:items-center justify-between"
-                  >
-                    <div className="flex items-center">
-                      {record.status === 'present' && <UserCheck className="text-green-500 mr-2" size={18} />}
-                      {record.status === 'late' && <Clock className="text-yellow-500 mr-2" size={18} />}
-                      {record.status === 'absent' && <AlertCircle className="text-red-500 mr-2" size={18} />}
-                      <span className={`capitalize font-medium ${getStatusColor(record.status)}`}>
-                        {record.status}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center mt-2 sm:mt-0">
-                      <div className="flex items-center mr-4 text-white/70">
-                        <Calendar className="mr-1" size={14} />
-                        <span className="text-sm">{formatDate(record.timestamp)}</span>
+            <div className="max-h-[300px] overflow-y-auto pr-2">
+              {attendanceRecords.length > 0 ? (
+                <div className="space-y-2">
+                  {attendanceRecords.map((record, index) => (
+                    <div 
+                      key={index} 
+                      className={`p-3 rounded-md flex items-center justify-between ${
+                        record.status === 'present' ? 'bg-green-600/20' : 'bg-red-600/20'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-medium text-white">{record.date}</div>
+                        <div className="text-sm text-white/70">Time: {record.time}</div>
                       </div>
-                      <div className="flex items-center text-white/70">
-                        <Clock className="mr-1" size={14} />
-                        <span className="text-sm">{formatTime(record.timestamp)}</span>
+                      <div>
+                        <span 
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            record.status === 'present' 
+                              ? 'bg-green-600 text-white' 
+                              : 'bg-red-600 text-white'
+                          }`}
+                        >
+                          {record.status.toUpperCase()}
+                        </span>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-white/50">
+                  No attendance records found
+                </div>
+              )}
+            </div>
           </CardContent>
+          <CardFooter>
+            <Button 
+              variant="outline" 
+              className="w-full border-white/20 text-white hover:bg-white/10"
+              onClick={() => {
+                setAttendanceRecords([]);
+                setTodayAttendanceCount(0);
+                localStorage.removeItem('attendanceRecords');
+                toast({
+                  title: "History cleared",
+                  description: "Your attendance history has been reset",
+                });
+              }}
+              disabled={attendanceRecords.length === 0}
+            >
+              Clear History
+            </Button>
+          </CardFooter>
         </Card>
       </motion.div>
     </div>

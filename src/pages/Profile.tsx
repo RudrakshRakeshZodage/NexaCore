@@ -1,8 +1,6 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { useFirebase } from "@/context/FirebaseContext";
 import { 
   User, 
   Mail, 
@@ -25,13 +23,12 @@ import EmailProfile from "@/components/EmailProfile";
 
 const Profile = () => {
   const { user } = useAuth();
-  const { user: firebaseUser } = useFirebase();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [profileData, setProfileData] = useState({
-    name: user?.name || firebaseUser?.displayName || "User",
-    email: user?.email || firebaseUser?.email || "user@example.com",
+    name: user?.name || "User",
+    email: user?.email || "user@example.com",
     phone: "+91 9876543210",
     birthdate: "1998-06-15",
     address: "Pune, Maharashtra, India",

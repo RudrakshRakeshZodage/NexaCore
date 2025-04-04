@@ -1,27 +1,25 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useFirebase } from '../context/FirebaseContext';
+import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { motion } from 'framer-motion';
 
 const CorporateLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { auth, signIn } = useFirebase();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await loginWithGoogle();
       toast({
         title: "Login successful",
         description: "Welcome back to NexaCore!",
@@ -44,7 +42,7 @@ const CorporateLogin = () => {
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      await login(email, password);
       toast({
         title: "Login successful",
         description: "Welcome back to NexaCore!",

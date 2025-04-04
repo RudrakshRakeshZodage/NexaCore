@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as faceapi from '@vladmandic/face-api';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Define proper types for expressions
 type Expression = "neutral" | "happy" | "sad" | "angry" | "fearful" | "disgusted" | "surprised";
@@ -27,6 +27,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
     dominantExpression: '',
     expressions: {}
   });
+  const { toast } = useToast();
 
   useEffect(() => {
     if (expressionResults.dominantExpression && onAnalysisComplete) {
@@ -64,7 +65,7 @@ const FaceAnalysis: React.FC<FaceAnalysisProps> = ({ onAnalysisComplete }) => {
         tracks.forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [toast]);
 
   const startVideo = async () => {
     if (!isModelLoaded) {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useFirebase } from '../context/FirebaseContext';
+import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const { resetPassword } = useFirebase();
+  const { forgotPassword } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,7 +19,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      await resetPassword(email);
+      await forgotPassword(email);
       setSent(true);
       toast({
         title: "Reset email sent",
