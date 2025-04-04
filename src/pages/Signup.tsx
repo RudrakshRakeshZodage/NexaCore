@@ -50,18 +50,18 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white">Create an Account</CardTitle>
+          <CardDescription className="text-center text-gray-600 dark:text-gray-300">
             Enter your details to create your NexaCore account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
               <Input
                 id="email"
                 type="email"
@@ -69,10 +69,11 @@ const Signup = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">Password</label>
+              <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-200">Password</label>
               <Input
                 id="password"
                 type="password"
@@ -80,10 +81,11 @@ const Signup = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-200">Confirm Password</label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -91,6 +93,7 @@ const Signup = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
@@ -99,7 +102,7 @@ const Signup = () => {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center">
+          <div className="text-sm text-center text-gray-700 dark:text-gray-300">
             Already have an account?{" "}
             <Link to="/login" className="text-blue-600 hover:underline">
               Login

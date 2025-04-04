@@ -74,24 +74,24 @@ const StudentSignup = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[url('/lovable-uploads/b154ac24-a418-44be-ae17-23e35c7799f8.png')] bg-cover bg-center bg-fixed p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="border-blue-200/30 shadow-xl bg-white/90 backdrop-blur">
+        <Card className="border-blue-200/30 shadow-xl bg-white/95 dark:bg-gray-900/95 backdrop-blur">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Create Student Account</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white">Create Student Account</CardTitle>
+            <CardDescription className="text-center text-gray-600 dark:text-gray-300">
               Enter your details to create your student NexaCore account
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="studentName" className="text-sm font-medium">Full Name</label>
+                <label htmlFor="studentName" className="text-sm font-medium text-gray-700 dark:text-gray-200">Full Name</label>
                 <Input
                   id="studentName"
                   type="text"
@@ -99,10 +99,11 @@ const StudentSignup = () => {
                   value={studentName}
                   onChange={(e) => setStudentName(e.target.value)}
                   required
+                  className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">Email</label>
+                <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
                 <Input
                   id="email"
                   type="email"
@@ -110,10 +111,11 @@ const StudentSignup = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">Password</label>
+                <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-200">Password</label>
                 <Input
                   id="password"
                   type="password"
@@ -121,10 +123,11 @@ const StudentSignup = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-200">Confirm Password</label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -132,6 +135,7 @@ const StudentSignup = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
@@ -140,17 +144,17 @@ const StudentSignup = () => {
               
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-300"></span>
+                  <span className="w-full border-t border-gray-300 dark:border-gray-600"></span>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">Or continue with</span>
                 </div>
               </div>
               
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full flex items-center justify-center gap-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
                 onClick={handleGoogleSignUp}
                 disabled={loading}
               >
@@ -167,13 +171,13 @@ const StudentSignup = () => {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-center">
+            <div className="text-sm text-center text-gray-700 dark:text-gray-300">
               Already have a student account?{" "}
               <Link to="/login/student" className="text-blue-600 hover:underline">
                 Login
               </Link>
             </div>
-            <div className="text-sm text-center">
+            <div className="text-sm text-center text-gray-700 dark:text-gray-300">
               <Link to="/login-selection" className="text-blue-600 hover:underline">
                 Back to selection
               </Link>
