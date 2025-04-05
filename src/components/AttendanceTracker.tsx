@@ -212,7 +212,7 @@ const AttendanceTracker = () => {
               
               {locationStatus === 'allowed' && distance !== null && (
                 <div className="text-green-400 text-sm">
-                  Location verified: {Math.round(distance)}m from VIVA Institute
+                  Location verified successfully.
                 </div>
               )}
             </CardContent>
