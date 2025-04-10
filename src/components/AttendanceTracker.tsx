@@ -13,9 +13,9 @@ interface AttendanceRecord {
 }
 
 const VIVA_INSTITUTE_LOCATION = {
-  latitude: 19.4615, // Approximate coordinates for VIVA Institute of Technology, Shirgaon
-  longitude: 72.7933,
-  address: "VIVA Institute of Technology, Shirgaon, Veer Sawarkar road, Tal, East, Chandansar, Virar, Vasai, Maharashtra 401305"
+  latitude: 19.0811, // Approximate coordinates for VIVA Institute of Technology, Shirgaon
+  longitude: 72.8311,
+  address: "SVKM's Dwarkadas J. Sanghvi College of Engineering"
 };
 
 const AttendanceTracker = () => {
@@ -91,7 +91,9 @@ const AttendanceTracker = () => {
         setLocationStatus('allowed');
         toast({
           title: "Location access granted",
-          description: `You are approximately ${Math.round(distanceToInstitute)}m from VIVA Institute`,
+          description: `Attendance Successful`,
+          variant: "default",
+        
         });
       },
       (error) => {
@@ -177,8 +179,8 @@ const AttendanceTracker = () => {
               <div className="w-full bg-white/5 p-4 rounded-lg flex items-center">
                 <MapPin className="text-nexacore-teal mr-2" size={20} />
                 <div>
-                  <div className="text-white font-medium">VIVA Institute of Technology</div>
-                  <div className="text-white/70 text-sm">Shirgaon, Virar, Maharashtra</div>
+                  <div className="text-white font-medium"> SVKM's Dwarkadas J. Sanghvi College of Engineering </div>
+                  <div className="text-white/70 text-sm">Vile Parle, Mumbai, Maharashtra</div>
                   <div className="text-nexacore-teal text-sm mt-1">
                     Only GPS permission is required to mark attendance
                   </div>

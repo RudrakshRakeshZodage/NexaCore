@@ -263,9 +263,8 @@ Schedule regular learning sessions, join developer communities, and actively see
 
 ## Physical Health Overview
 - Height: 175 cm
-- Weight: 70 kg
-- Blood Pressure: 120/80 mmHg (Normal)
-- Resting Heart Rate: 72 bpm (Healthy range)
+- Weight: 75kg
+
 
 ## Lifestyle Analysis
 Your current lifestyle shows a moderate level of physical activity with 3-5 exercise sessions per week. Your sleep pattern averages 7 hours per night, which meets the recommended guidelines for adults.

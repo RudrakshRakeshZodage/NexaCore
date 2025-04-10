@@ -170,13 +170,22 @@ const addRecommendationsToReport = (doc: jsPDF, reportType: string, data: any, s
       yPos += 7;
       
       const eduRecommendations = [
-        "Create a structured study schedule with dedicated focus time",
-        "Join study groups or communities of practice for collaborative learning",
-        "Implement spaced repetition and active recall techniques in your study routine",
-        "Supplement formal education with online courses in your areas of interest",
-        "Seek practical applications for theoretical knowledge through projects",
-        "Consider taking breaks using the Pomodoro technique (25 min work, 5 min break)",
-        "Review and consolidate learning materials at the end of each week"
+        "People remember 90% of what they teach others—try teaching to reinforce your own understanding",
+        "The brain processes visuals 60,000 times faster than text—use diagrams, charts, and mind maps",
+        "Sleep directly affects memory consolidation—prioritize 7–9 hours of quality sleep nightly",
+        "Physical activity increases brain function and creativity—aim for at least 30 minutes of exercise daily",
+        "Checking your phone frequently can reduce focus—use Do Not Disturb mode during work blocks",
+        "Multitasking lowers productivity by up to 40%—focus on one task at a time for better results",
+        "Writing things down improves memory—keep a daily planner or handwritten journal",
+        "Drinking water boosts concentration and alertness—start your day with a glass of water",
+        "Goals are 42% more likely to be achieved when written down—maintain a goal journal",
+        "Listening to instrumental music can improve focus—try Lo-Fi, classical, or ambient playlists",
+        "Color-coding notes helps memory retrieval—use consistent colors for themes or topics",
+        "Using the 2-minute rule helps beat procrastination—if it takes less than 2 minutes, do it now",
+        "Learning a new language improves problem-solving skills—start with simple daily practice apps",
+        "The average attention span is under 10 minutes—chunk your study/work into short, focused bursts",
+        "Having a clean workspace boosts clarity—spend 5 minutes tidying before starting any task"
+
       ];
       
       eduRecommendations.forEach(rec => {
@@ -190,13 +199,29 @@ const addRecommendationsToReport = (doc: jsPDF, reportType: string, data: any, s
       yPos += 7;
       
       const healthRecommendations = [
-        "Aim for 7-9 hours of quality sleep each night",
-        "Maintain a balanced diet rich in vegetables, lean proteins, and whole grains",
-        "Stay hydrated by drinking at least 8 glasses of water daily",
-        "Practice daily mindfulness or meditation for 10-15 minutes",
-        "Take regular breaks during work to reduce eye strain and mental fatigue",
-        "Consider integrating strength training 2-3 times per week",
-        "Schedule regular health check-ups and preventive screenings"
+        [
+          "Aim for 7-9 hours of quality sleep each night",
+          "Maintain a balanced diet rich in vegetables, lean proteins, and whole grains",
+          "Stay hydrated by drinking at least 8 glasses of water daily",
+          "Practice daily mindfulness or meditation for 10-15 minutes",
+          "Take regular breaks during work to reduce eye strain and mental fatigue",
+          "Consider integrating strength training 2-3 times per week",
+          "Schedule regular health check-ups and preventive screenings",
+          "Limit screen time before bed to improve sleep quality",
+          "Incorporate at least 30 minutes of moderate physical activity daily",
+          "Reduce processed sugar intake to support metabolic health",
+          "Stretch regularly to improve flexibility and reduce injury risk",
+          "Wear sunscreen daily to protect skin from harmful UV rays",
+          "Limit caffeine intake in the afternoon to prevent sleep disruption",
+          "Maintain good posture while sitting to avoid back and neck pain",
+          "Practice deep breathing exercises to manage stress effectively",
+          "Avoid skipping meals to maintain stable energy levels",
+          "Include omega-3 rich foods like walnuts and flaxseeds in your diet",
+          "Replace sugary beverages with water or herbal teas",
+          "Prioritize mental well-being by journaling or talking to a trusted friend",
+          "Avoid smoking and limit alcohol consumption for long-term health benefits"
+      ]
+      
       ];
       
       healthRecommendations.forEach(rec => {
@@ -210,13 +235,26 @@ const addRecommendationsToReport = (doc: jsPDF, reportType: string, data: any, s
       yPos += 7;
       
       const financeRecommendations = [
-        "Create a budget using the 50/30/20 rule (needs/wants/savings)",
-        "Build an emergency fund covering 3-6 months of expenses",
-        "Review and optimize recurring expenses quarterly",
-        "Consider automated transfers to savings accounts on payday",
-        "Diversify investments based on your risk tolerance and time horizon",
-        "Negotiate bills and evaluate subscriptions annually",
-        "Set specific, measurable financial goals with deadlines"
+       "Set clear short-term and long-term goals for academic or career growth",
+  "Use a digital calendar or planner to manage deadlines and tasks",
+  "Break larger tasks into smaller steps to avoid feeling overwhelmed",
+  "Stay updated with industry or academic trends through blogs and newsletters",
+  "Practice effective email etiquette and clear communication",
+  "Develop a consistent sleep routine to stay productive during the day",
+  "Dedicate time weekly for skill development through free online resources",
+  "Keep your workspace organized to reduce stress and improve focus",
+  "Take regular breaks to maintain concentration and avoid burnout",
+  "Use time-blocking techniques to prioritize important tasks",
+  "Seek feedback regularly and apply it to improve your work or studies",
+  "Limit social media usage during focus hours to avoid distractions",
+  "Maintain a good work-study-life balance to support mental health",
+  "Build a professional online presence (e.g., LinkedIn) early on",
+  "Attend workshops, seminars, or webinars to build your knowledge base",
+  "Document your accomplishments and skills in a resume or portfolio",
+  "Network with peers and mentors for support and opportunities",
+  "Take advantage of student or employee discounts when available",
+  "Set boundaries between work/study time and personal time",
+  "Celebrate small wins to stay motivated and confident"
       ];
       
       financeRecommendations.forEach(rec => {
@@ -230,13 +268,24 @@ const addRecommendationsToReport = (doc: jsPDF, reportType: string, data: any, s
       yPos += 7;
       
       const comprehensiveRecommendations = [
-        "Establish a holistic daily routine that balances work, rest, and personal development",
-        "Integrate your educational goals with career planning",
-        "Consider how improvements in health might positively impact productivity",
-        "Create a financial plan that supports your educational and health goals",
-        "Practice self-compassion as you work toward integrated personal growth",
-        "Schedule regular reviews to track progress across all domains",
-        "Find synergies between different areas of your life for maximum impact"
+        "Drinking water first thing in the morning can kickstart your metabolism",
+        "The human brain uses about 20% of the body's total energy",
+        "Reading for just 6 minutes a day can reduce stress by up to 68%",
+        "Vitamin D is best absorbed through sunlight—10-15 minutes a day is enough",
+        "Recycling one aluminum can saves enough energy to run a TV for 3 hours",
+        "The average person has about 60,000 thoughts per day—most are repetitive",
+        "Blue light from screens can interfere with sleep by suppressing melatonin",
+        "Walking boosts creative thinking by up to 60%, according to Stanford studies",
+        "Listening to music while studying can improve focus, especially instrumental music",
+        "Plants not only purify air but can also boost mood and reduce anxiety",
+        "The average adult needs 7–9 hours of sleep to function optimally",
+        "Regular physical activity can improve memory and cognitive function",
+        "Your gut health affects your mood and mental health due to the gut-brain axis",
+        "Learning a second language improves multitasking and decision-making skills",
+        "The Eiffel Tower can grow more than 6 inches in summer due to heat expansion",
+        "Yawning helps cool down the brain and improve alertness",
+        "Writing by hand improves memory retention more than typing",
+        "Chewing gum can help improve concentration and reduce stress"
       ];
       
       comprehensiveRecommendations.forEach(rec => {
@@ -354,7 +403,18 @@ const addAppendixToReport = (doc: jsPDF, reportType: string, data: any, startY: 
         { title: "Notion", author: "", description: "All-in-one workspace for notes, tasks, and planning" },
         { title: "The NexaCore Blog", author: "", description: "Articles on integrated personal development" },
         { title: "Todoist", author: "", description: "Task management app for productivity" },
-        { title: "The 7 Habits of Highly Effective People", author: "Stephen Covey", description: "Classic book on personal effectiveness" }
+        { title: "The 7 Habits of Highly Effective People", author: "Stephen Covey", description: "Classic book on personal effectiveness" },
+      
+        // Tech & Software Development resources
+        { title: "Clean Code", author: "Robert C. Martin", description: "Guide to writing clean, maintainable software" },
+        { title: "You Don’t Know JS (book series)", author: "Kyle Simpson", description: "Deep dive into JavaScript fundamentals" },
+        { title: "The Pragmatic Programmer", author: "Andrew Hunt & David Thomas", description: "Foundational book for modern software development" },
+        { title: "Eloquent JavaScript", author: "Marijn Haverbeke", description: "A modern introduction to JavaScript" },
+        { title: "Design Patterns: Elements of Reusable Object-Oriented Software", author: "Erich Gamma et al.", description: "Classic book on reusable code architecture" },
+        { title: "CS50 by Harvard (free online course)", author: "Harvard University", description: "Introduction to computer science and programming" },
+        { title: "freeCodeCamp", author: "", description: "Interactive platform to learn web development and programming for free" },
+        { title: "Frontend Mentor", author: "", description: "Practice real-world frontend projects using HTML, CSS, and JavaScript" },
+        { title: "Roadmap.sh", author: "", description: "Guides and paths for learning web development, DevOps, and more" }
       ];
       
       comprehensiveResources.forEach(resource => {
@@ -784,11 +844,16 @@ const addComprehensiveContent = (doc: jsPDF, allData: any, startY: number) => {
   doc.setTextColor(100, 100, 100);
   
   const insights = [
-    "Your educational goals can be supported by maintaining good health habits",
-    "Financial planning should align with your educational investments and health needs",
-    "Stress management is important across all domains for optimal performance",
-    "Building consistent habits can create positive momentum across all areas of life",
-    "Regular review and adjustment of your strategies leads to continuous improvement"
+    "Time management skills benefit both academic and professional growth",
+    "A well-structured sleep schedule improves focus and decision-making",
+    "Combining learning with hands-on projects boosts both retention and confidence",
+    "Tracking your spending helps reduce stress and increase financial freedom",
+    "Physical activity can enhance mental clarity and emotional stability",
+    "Regular reflection helps align daily actions with long-term goals",
+    "Digital tools like calendars, habit trackers, and budgeting apps can simplify life",
+    "Healthy social connections are key for emotional resilience and motivation",
+    "Limiting screen time before bed improves sleep and next-day productivity",
+    "Staying curious and open to new ideas fuels lifelong learning and adaptability"
   ];
   
   insights.forEach(insight => {

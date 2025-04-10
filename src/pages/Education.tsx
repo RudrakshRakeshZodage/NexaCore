@@ -12,14 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PlusIcon, MessageSquareIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase"; // Import your Firebase database
+import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, doc, updateDoc } from "firebase/firestore";
 
 const Education = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // State variables
   const [educationLevel, setEducationLevel] = useState("");
   const [institution, setInstitution] = useState("");
   const [fieldOfStudy, setFieldOfStudy] = useState("");
@@ -37,13 +36,7 @@ const Education = () => {
     completionDate: "",
     certificate: false,
   });
-  const [recommendations, setRecommendations] = useState<
-    {
-      courses: { name: string; provider: string; estimatedFee: string; duration: string }[];
-      resources: { name: string; type: string; link: string }[];
-      skillsToLearn: string[];
-    }
-  >({
+  const [recommendations, setRecommendations] = useState({
     courses: [
       { name: "Machine Learning Fundamentals", provider: "Coursera", estimatedFee: "$49", duration: "3 months" },
       { name: "Full Stack Web Development", provider: "Udemy", estimatedFee: "$19.99", duration: "4 months" },
@@ -59,7 +52,6 @@ const Education = () => {
 
   const [educationDocId, setEducationDocId] = useState<string | null>(null);
 
-  // Fetch education data from Firebase on component mount
   useEffect(() => {
     const fetchEducationData = async () => {
       try {
@@ -143,7 +135,11 @@ const Education = () => {
   };
 
   return (
-    <DashboardLayout>
+   
+<>
+
+
+<DashboardLayout>
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -492,13 +488,9 @@ const Education = () => {
       </Tabs>
     </div>
   </DashboardLayout>
+</>
+ 
   );
 };
 
 export default Education;
-
-
-
-
-
-
